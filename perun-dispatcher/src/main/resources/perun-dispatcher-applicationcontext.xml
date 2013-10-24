@@ -29,7 +29,7 @@ http://www.springframework.org/schema/task http://www.springframework.org/schema
     
     <!-- Importing Perun Core... -->
     <!-- <import resource="classpath:perun-beans.xml"/> -->
-    
+    	
     <tx:advice id="txAdvice">
         <tx:attributes>
             <tx:method name="get*" read-only="true"/>
@@ -39,8 +39,9 @@ http://www.springframework.org/schema/task http://www.springframework.org/schema
 
     <!-- Scans for @Repository, @Service and @Component -->
     <context:component-scan base-package="cz.metacentrum.perun.dispatcher"/>
+    <context:component-scan base-package="cz.metacentrum.perun.controller"/>
     
-    <bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+	<bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
   		<property name="corePoolSize" value="10" />
   		<property name="maxPoolSize" value="50" />
   		<property name="queueCapacity" value="100" />
@@ -57,6 +58,13 @@ http://www.springframework.org/schema/task http://www.springframework.org/schema
         <property name="ignoreResourceNotFound">
             <value>true</value>
         </property>
+       	<property name="properties">
+       		<props>
+       		    	<prop key="perun.principal.name">perunTests</prop>
+       		    	<prop key="perun.principal.extSourceName">cz.metacentrum.perun.core.impl.ExtSourceInternal</prop>
+       		    	<prop key="perun.principal.extSourceType">cz.metacentrum.perun.core.impl.ExtSourceInternal</prop>
+       		</props>	    
+       	</property> 
     </bean>
     
     <!-- BEGIN Quartz tasks -->	

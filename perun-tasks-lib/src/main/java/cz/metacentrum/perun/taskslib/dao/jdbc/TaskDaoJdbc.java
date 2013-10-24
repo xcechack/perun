@@ -37,7 +37,7 @@ public class TaskDaoJdbc extends JdbcDaoSupport implements TaskDao {
   public static final SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 
   public final static String taskMappingSelectQuery = " tasks.id as tasks_id, tasks.schedule as tasks_schedule, tasks.recurrence as tasks_recurrence, " +
-  		"tasks.delay as tasks_delay, tasks.status as tasks_status, tasks.start_time as tasks_start_time, tasks.end_time as tasks_end_time ";
+  		"tasks.delay as tasks_delay, tasks.status as tasks_status, tasks.type as tasks_type, tasks.start_time as tasks_start_time, tasks.end_time as tasks_end_time ";
   
   public static final RowMapper<Task> TASK_ROWMAPPER = new RowMapper<Task>() {
 
@@ -72,7 +72,7 @@ public class TaskDaoJdbc extends JdbcDaoSupport implements TaskDao {
       } else {
         throw new IllegalArgumentException("Task status unknown :-(");
       }
-      
+
       task.setFacility(FacilitiesManagerImpl.FACILITY_MAPPER.mapRow(rs, i));
       
       task.setExecService(ExecServiceDaoJdbc.EXEC_SERVICE_ROWMAPPER.mapRow(rs, i));
@@ -88,7 +88,7 @@ public class TaskDaoJdbc extends JdbcDaoSupport implements TaskDao {
     try {
       newTaskId = Utils.getNewId(this.getJdbcTemplate(), "tasks_id_seq");
       this.getJdbcTemplate().update(
-          "insert into tasks(id, exec_service_id, facility_id, schedule, recurrence, delay, status, engine_id) values (?,?,?,to_date(?,'DD-MM-YYYY HH24:MI:SS'),?,?,?,?)",
+          "insert into tasks(id, exec_service_id, facility_id, schedule, recurrence, delay, status, engine_id) values (?,?,?,to_date(?,'DD-MM-YYYY HH24:MI:SS'),?,?,?,?,?)",
           newTaskId, task.getExecServiceId(), task.getFacilityId(), formatter.format(task.getSchedule()), task.getRecurrence(), task.getDelay(), task.getStatus().toString(), engineID);
       return newTaskId;
     } catch (DataIntegrityViolationException ex) {

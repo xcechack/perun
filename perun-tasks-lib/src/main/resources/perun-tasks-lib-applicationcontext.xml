@@ -36,5 +36,4 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
     <bean id="execServiceDependencyDao" class="cz.metacentrum.perun.taskslib.dao.jdbc.ExecServiceDependencyDaoJdbc">
       <property name="dataSource" ref="dataSource"/> 
     </bean>
-
 </beans>

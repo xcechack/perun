@@ -36,18 +36,22 @@ import cz.metacentrum.perun.core.api.exceptions.ServiceExistsException;
 import cz.metacentrum.perun.core.impl.Utils;
 import cz.metacentrum.perun.taskslib.model.ExecService;
 import cz.metacentrum.perun.taskslib.model.ExecService.ExecServiceType;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author Michal Karm Babacek
- * @version $Id$
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = { "classpath:perun-tasks-lib-applicationcontext.xml", "classpath:perun-datasources.xml", "classpath:perun-beans.xml", "classpath:perun-transaction-manager.xml" })
-@TransactionConfiguration(defaultRollback = true, transactionManager = "springTransactionManager")
-@Transactional
+@ContextConfiguration(locations = { "classpath:perun-tasks-lib-applicationcontext.xml", "classpath:perun-datasources.xml", "classpath:perun-beans.xml",
+        "classpath:perun-datasources.xml" })
+@TransactionConfiguration(defaultRollback = true, transactionManager = "transactionManagerPerunController")
+//@Transactional(readOnly = true)
 public class ExecServiceDependencyDaoTest {
-
+    /*
+     * @Test
+     * public void testDummy() {
+     * 
+     * }
+     */
     private final static Logger log = LoggerFactory.getLogger(ExecServiceDependencyDaoTest.class);
 
     @Autowired

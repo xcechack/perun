@@ -51,14 +51,12 @@ import cz.metacentrum.perun.taskslib.service.GeneralServiceManager;
 */
 /**
  * @author Michal Karm Babacek
- * @version $Id$
- **/
-/*
+ *
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = { "classpath:perun-tasks-lib-applicationcontext.xml", "classpath:perun-datasources.xml", "classpath:perun-beans.xml", "classpath:perun-transaction-manager.xml" })
-@TransactionConfiguration(defaultRollback = true, transactionManager = "springTransactionManager")
-@Transactional
-*/
+@ContextConfiguration(locations = { "classpath:perun-controller-applicationcontext.xml", "classpath:perun-controller-applicationcontext-jdbc.xml", "classpath:perun-beans.xml",
+        "classpath:perun-datasources.xml" })
+@TransactionConfiguration(defaultRollback = true, transactionManager = "transactionManagerPerunController")
+*///@Transactional(readOnly = true)
 public class TaskResultDaoTest {
     
     @Test

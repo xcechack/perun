@@ -11,14 +11,10 @@ http://www.springframework.org/schema/context http://www.springframework.org/sch
 http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
 http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
 http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
-">
-    <import resource="classpath:perun-datasources.xml"/>
+"
+		default-lazy-init="true"
+>
     <import resource="classpath:perun-tasks-lib-applicationcontext.xml"/>
-    
-     <!-- Transaction manager for Spring JDBC -->
-    <bean id="transactionManagerPerunEngine" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
-        <property name="dataSource" ref="dataSource"/>
-    </bean>
     
     <!-- Enable @Transactional support -->
      <tx:annotation-driven transaction-manager="transactionManagerPerunEngine"/>
@@ -26,18 +22,12 @@ http://www.springframework.org/schema/task http://www.springframework.org/schema
     <!-- Enable @AspectJ support -->
     <aop:aspectj-autoproxy/>
     
+    <!-- Importing Perun Core... -->
+    <import resource="classpath:perun-beans.xml"/>
+
     <!-- Scans for @Repository, @Service and @Component -->
     <context:component-scan base-package="cz.metacentrum.perun.engine"/>
    
-    <!-- DAOs -->
-    <bean id="engineDao" class="cz.metacentrum.perun.engine.dao.jdbc.EngineDaoJdbc" init-method="initialize">
-      <property name="dataSource" ref="dataSource"/> 
-    </bean>
-    
-    <bean id="processingRuleDao" class="cz.metacentrum.perun.engine.dao.jdbc.ProcessingRuleDaoJdbc">
-      <property name="dataSource" ref="dataSource"/> 
-    </bean>
-    
     <task:scheduler id="scheduler" pool-size="4" />
     
     <task:scheduled-tasks scheduler="scheduler">

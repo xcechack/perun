@@ -8,10 +8,14 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
+import cz.metacentrum.perun.controller.service.GeneralServiceManager;
 import cz.metacentrum.perun.core.api.Destination;
+import cz.metacentrum.perun.core.api.Perun;
+import cz.metacentrum.perun.core.api.PerunPrincipal;
+import cz.metacentrum.perun.core.api.PerunSession;
 import cz.metacentrum.perun.core.api.Service;
-
 import cz.metacentrum.perun.core.api.exceptions.FacilityNotExistsException;
 import cz.metacentrum.perun.core.api.Facility;
 import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
@@ -20,9 +24,12 @@ import cz.metacentrum.perun.core.api.exceptions.ServiceNotExistsException;
 import cz.metacentrum.perun.engine.model.Statistics;
 import cz.metacentrum.perun.engine.scheduling.DependenciesResolver;
 import cz.metacentrum.perun.engine.scheduling.PropagationMaintainer;
+import cz.metacentrum.perun.engine.scheduling.SchedulingPool;
+import cz.metacentrum.perun.engine.scheduling.TaskResultListener;
 import cz.metacentrum.perun.engine.scheduling.TaskScheduler;
+//import cz.metacentrum.perun.engine.scheduling.TaskStatus;
+import cz.metacentrum.perun.engine.scheduling.TaskStatus.TaskDestinationStatus;
 import cz.metacentrum.perun.engine.service.EngineManager;
-
 import cz.metacentrum.perun.rpclib.Rpc;
 import cz.metacentrum.perun.taskslib.dao.TaskResultDao;
 import cz.metacentrum.perun.taskslib.model.ExecService;
@@ -37,6 +44,7 @@ import cz.metacentrum.perun.taskslib.service.TaskManager;
 public class PropagationMaintainerImpl implements PropagationMaintainer {
     private final static Logger log = LoggerFactory.getLogger(PropagationMaintainerImpl.class);
 
+/*
     @Autowired
     private TaskManager taskManager;
     @Autowired
@@ -45,21 +53,64 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     private TaskResultDao taskResultDao;
     @Autowired
     private EngineManager engineManager;
+ */
+    @Autowired
+    private SchedulingPool schedulingPool;
     @Autowired
     private DependenciesResolver dependenciesResolver;
     @Autowired
     private TaskScheduler taskScheduler;
     @Autowired
+    private Perun perun;
+/*
+    @Autowired
+    private GeneralServiceManager generalServiceManager;
+*/    
+    @Autowired
     private Properties propertiesBean;
-
+    @Autowired
+    private ThreadPoolTaskScheduler scheduler;
+    private PerunSession perunSession;
+    
     /**
      * TODO: Improve logic here: i.e.: stuck ExecutorEngine threads vs. Time-Out etc...
      */
     @Override
     public void checkResults() {
 
+		try {
+			perunSession = perun.getPerunSession(new PerunPrincipal(propertiesBean.getProperty("perun.principal.name"),
+					 propertiesBean.getProperty("perun.principal.extSourceName"),
+					 propertiesBean.getProperty("perun.principal.extSourceType")));
+		} catch (InternalErrorException e1) {
+			// TODO Auto-generated catch block
+			log.error("Error establishing perun session to check tasks propagation status: ", e1);
+			return;
+		}
+
+//    	checkProcessingTasks();
+    	
+		checkFinishedTasks();
+		
+		rescheduleErrorTasks();
+    	
+    	endStuckTasks();
+    	
+    	rescheduleOldDoneTasks();
+
+    }
+
+/*    
+    private void checkProcessingTasks() {
         log.info("Gonna list tasks in PROCESSING...");
-        for (Task task : taskManager.listAllTasksInState(TaskStatus.PROCESSING, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")))) {
+
+        for(Task task: schedulingPool.getProcessingTasks()) {
+            if(task.getExecService().getExecServiceType().equals(ExecService.ExecServiceType.GENERATE)) continue;
+            log.info("Gonna check results for Task ID:" + task.getId());
+
+        }
+        
+       for (Task task : taskManager.listAllTasksInState(TaskStatus.PROCESSING, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")))) {
             //skip GEN tasks
             if(task.getExecService().getExecServiceType().equals(ExecService.ExecServiceType.GENERATE)) continue;
             log.info("Gonna check results for Task ID:" + task.getId());
@@ -86,50 +137,209 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
               log.error("Facility for the task no longer exists. Removing task", ex);
               taskManager.removeTask(task.getId(), Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
             }
-          
-            /**
-             * Do we have the same number of Destinations as we have TaskResults?
-             */
-            if (taskResults.size() == destinations.size()) {
-                /**
-                 * Let's check whether they are all DONE or not...
-                 */
-                int amountDone = 0;
-                int amountDenied = 0;
-                int amountError = 0;
-                int amountFatalError = 0;
-                for (TaskResult taskResult : taskResults) {
-                    switch (taskResult.getStatus()) {
-                    case DONE:
-                        amountDone++;
-                        break;
-                    case DENIED:
-                        amountDenied++;
-                        break;
-                    case ERROR:
-                        amountError++;
-                        break;
-                    case FATAL_ERROR:
-                        amountFatalError++;
-                        break;
-                    default:
-                        throw new IllegalArgumentException("WTF?! " + taskResult.getStatus().toString());
-                    }
-                }
 
-                if (amountDone + amountDenied == taskResults.size()) {
-                    /**
-                     * Super, all is DONE or we don't care (DENIED) :-)
-                     */
-                    log.info("Task ID " + task.getId() + " has all Tasks_results either DONE or DENIED, so we set it as DONE.");
-                    task.setStatus(TaskStatus.DONE);
+            switch(task.getType()) {
+
+            case SERIAL:
+            	collectSerialTaskResults(task, taskResults, destinations);
+            	break;
+
+            case PARALLEL:
+            	collectParallelTaskResults(task, taskResults, destinations);
+            	break;
+
+            default:
+            	log.error("Unknown task type. Assuming parallel.");
+            	collectParallelTaskResults(task, taskResults, destinations);
+            	break;
+            }
+        }
+    }
+    
+
+    private void collectSerialTaskResults(Task task, List<TaskResult> taskResults, List<Destination> destinations) {
+        if (taskResults.size() <= destinations.size()) {
+ 			// Let's check whether they are all DONE or not...
+            int amountDone = 0;
+            int amountDenied = 0;
+            int amountError = 0;
+            int amountFatalError = 0;
+            for (TaskResult taskResult : taskResults) {
+                switch (taskResult.getStatus()) {
+                case DONE:
+                    amountDone++;
+                    break;
+                case DENIED:
+                    amountDenied++;
+                    break;
+                case ERROR:
+                    amountError++;
+                    break;
+                case FATAL_ERROR:
+                    amountFatalError++;
+                    break;
+                default:
+                    throw new IllegalArgumentException("WTF?! " + taskResult.getStatus().toString());
+                }
+            }
+
+            if (amountDone > 0) {
+ 				// Super, at least one task is DONE.
+                log.info("Task ID " + task.getId() + " has one Tasks_result DONE, so we set it as DONE.");
+                task.setStatus(TaskStatus.DONE);
+                task.setEndTime(new Date(System.currentTimeMillis()));
+                taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
+
+                //Set its GENERATE dependencies as dirty
+                //TODO: Hmm...what to do in case of exceptions?
+
+                try {
+                    log.info("I am going to set all ExecService " + task.getExecServiceId() + " dependencies (the GENERATE ones) to NONE.");
+                    setAllGenerateDependenciesToNone(dependenciesResolver.listDependencies(task.getExecServiceId()), task.getFacilityId());
+                } catch (ServiceNotExistsException e) {
+                    log.error(e.toString(), e);
+                } catch (InternalErrorException e) {
+                    log.error(e.toString(), e);
+                } catch (PrivilegeException e) {
+                    log.error(e.toString(), e);
+                }
+            } else {
+                //TODO Now FATAL_ERROR and ERROR are being treated exactly the same. Is FATAL_ERROR really necessary?
+ 				// Not DONE yet, are there any destinations left?
+                if (taskResults.size() == destinations.size()) {
+                    // Well, we ended in ERROR...
+                    log.info("There has been no DONE state Tasks_results, so I am going to set the Task ID" + task.getId() + " to ERROR.");
+                    task.setStatus(TaskStatus.ERROR);
                     task.setEndTime(new Date(System.currentTimeMillis()));
                     taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
+                    //Set its GENERATE dependencies as dirty
+                    //TODO: Hmm...what to do in case of exceptions?
 
+                    try {
+                    	setAllGenerateDependenciesToNone(dependenciesResolver.listDependencies(task.getExecServiceId()), task.getFacilityId());
+                    } catch (ServiceNotExistsException e) {
+                        log.error(e.toString(), e);
+                    } catch (InternalErrorException e) {
+                        log.error(e.toString(), e);
+                    } catch (PrivilegeException e) {
+                        log.error(e.toString(), e);
+                    }
+                } else {
+                     // There are some destinations left to try, schedule it back
+                	task.setStatus(TaskStatus.PLANNED);
+                	task.setSchedule(new Date(System.currentTimeMillis()));
+                	taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
+                }
+            }
+        } else if (taskResults.size() > destinations.size()) {
+            log.error("There are more Task_results then destinations. so I am going to set the Task ID" + task.getId() + " to ERROR.");
+            task.setStatus(TaskStatus.ERROR);
+            task.setEndTime(new Date(System.currentTimeMillis()));
+            taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
+            //Set its GENERATE dependencies as dirty
+            //TODO: Hmm...what to do in case of exceptions?
+            try {
+            	setAllGenerateDependenciesToNone(dependenciesResolver.listDependencies(task.getExecServiceId()), task.getFacilityId());
+            } catch (ServiceNotExistsException e) {
+              log.error(e.toString(), e);
+            } catch (InternalErrorException e) {
+              log.error(e.toString(), e);
+            } catch (PrivilegeException e) {
+              log.error(e.toString(), e);
+            }
+        } 
+        
+        if(false) {
+            final long THREE_HOUR = 1000 * 60 * 60 * 3;
+            long timeDifference = System.currentTimeMillis() - task.getStartTime().getTime();
+            if(timeDifference > THREE_HOUR) {
+              //
+              // WARNING!!
+              //
+              // This can be dangerous. We are not sure if there isn't any slave script running for this task.
+              //
+              log.error("There are only " + taskResults.size() + " Task_results for Task ID" + task.getId() + ", but task is in processing too long, so switch task to ERROR");
+              task.setStatus(TaskStatus.ERROR);
+              task.setEndTime(new Date(System.currentTimeMillis()));
+              taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
+              //Set its GENERATE dependencies as dirty
+              //TODO: Hmm...what to do in case of exceptions?
+              try {
+                setAllGenerateDependenciesToNone(dependenciesResolver.listDependencies(task.getExecServiceId()), task.getFacilityId());
+              } catch (ServiceNotExistsException e) {
+                log.error(e.toString(), e);
+              } catch (InternalErrorException e) {
+                log.error(e.toString(), e);
+              } catch (PrivilegeException e) {
+                log.error(e.toString(), e);
+              }
+            }
+
+            log.info("There are only " + taskResults.size() + " Task_results for Task ID" + task.getId() + ", so we ain't gonna do anything.");
+            // Well, we ain't gonna do anything bro...
+            // TODO: Time out...
+        }
+    }
+    
+    private void collectParallelTaskResults(Task task, List<TaskResult> taskResults, List<Destination> destinations) {
+         // Do we have the same number of Destinations as we have TaskResults?
+        if (taskResults.size() == destinations.size()) {
+ 			// Let's check whether they are all DONE or not...
+            int amountDone = 0;
+            int amountDenied = 0;
+            int amountError = 0;
+            int amountFatalError = 0;
+            for (TaskResult taskResult : taskResults) {
+                switch (taskResult.getStatus()) {
+                case DONE:
+                    amountDone++;
+                    break;
+                case DENIED:
+                    amountDenied++;
+                    break;
+                case ERROR:
+                    amountError++;
+                    break;
+                case FATAL_ERROR:
+                    amountFatalError++;
+                    break;
+                default:
+                    throw new IllegalArgumentException("WTF?! " + taskResult.getStatus().toString());
+                }
+            }
+
+            if (amountDone + amountDenied == taskResults.size()) {
+                // Super, all is DONE or we don't care (DENIED) :-)
+                log.info("Task ID " + task.getId() + " has all Tasks_results either DONE or DENIED, so we set it as DONE.");
+                task.setStatus(TaskStatus.DONE);
+                task.setEndTime(new Date(System.currentTimeMillis()));
+                taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
+
+                //Set its GENERATE dependencies as dirty
+                //TODO: Hmm...what to do in case of exceptions?
+                try {
+                    log.info("I am going to set all ExecService " + task.getExecServiceId() + " dependencies (the GENERATE ones) to NONE.");
+
+                    setAllGenerateDependenciesToNone(dependenciesResolver.listDependencies(task.getExecServiceId()), task.getFacilityId());
+                } catch (ServiceNotExistsException e) {
+                    log.error(e.toString(), e);
+                } catch (InternalErrorException e) {
+                    log.error(e.toString(), e);
+                } catch (PrivilegeException e) {
+                    log.error(e.toString(), e);
+                }
+            } else {
+                //TODO Now FATAL_ERROR and ERROR are being treated exactly the same. Is FATAL_ERROR really necessary?
+                // Were there any FATAL_ERRORs?
+                if (amountFatalError > 0) {
+                    // Well, we ended in ERROR...
+                    log.info("There have been some FATAL_ERRORs with Tasks_results, so I am going to set the Task ID" + task.getId() + " to ERROR.");
+                    task.setStatus(TaskStatus.ERROR);
+                    task.setEndTime(new Date(System.currentTimeMillis()));
+                    taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
                     //Set its GENERATE dependencies as dirty
                     //TODO: Hmm...what to do in case of exceptions?
                     try {
-                        log.info("I am going to set all ExecService " + task.getExecServiceId() + " dependencies (the GENERATE ones) to NONE.");
                         setAllGenerateDependenciesToNone(dependenciesResolver.listDependencies(task.getExecServiceId()), task.getFacilityId());
                     } catch (ServiceNotExistsException e) {
                         log.error(e.toString(), e);
@@ -139,99 +349,136 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
                         log.error(e.toString(), e);
                     }
                 } else {
-                    //TODO Now FATAL_ERROR and ERROR are being treated exactly the same. Is FATAL_ERROR really necessary?
-                    /**
-                     * Were there any FATAL_ERRORs?
-                     */
-                    if (amountFatalError > 0) {
-                        /**
-                         * Well, we ended in ERROR...
-                         */
-                        log.info("There have been some FATAL_ERRORs with Tasks_results, so I am going to set the Task ID" + task.getId() + " to ERROR.");
-                        task.setStatus(TaskStatus.ERROR);
-                        task.setEndTime(new Date(System.currentTimeMillis()));
-                        taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
-                        //Set its GENERATE dependencies as dirty
-                        //TODO: Hmm...what to do in case of exceptions?
-                        try {
-                            setAllGenerateDependenciesToNone(dependenciesResolver.listDependencies(task.getExecServiceId()), task.getFacilityId());
-                        } catch (ServiceNotExistsException e) {
-                            log.error(e.toString(), e);
-                        } catch (InternalErrorException e) {
-                            log.error(e.toString(), e);
-                        } catch (PrivilegeException e) {
-                            log.error(e.toString(), e);
-                        }
-                    } else {
-                        /**
-                         * There are some ERRORs, so we leave it ERROR...
-                         */
-                        log.info("There have been some ERRORs with Tasks_results, so I am going to set the Task ID" + task.getId() + " to ERROR.");
-                        task.setStatus(TaskStatus.ERROR);
-                        task.setEndTime(new Date(System.currentTimeMillis()));
-                        taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
-                        //Set its GENERATE dependencies as dirty
-                        //TODO: Hmm...what to do in case of exceptions?
-                        try {
-                            setAllGenerateDependenciesToNone(dependenciesResolver.listDependencies(task.getExecServiceId()), task.getFacilityId());
-                        } catch (ServiceNotExistsException e) {
-                            log.error(e.toString(), e);
-                        } catch (InternalErrorException e) {
-                            log.error(e.toString(), e);
-                        } catch (PrivilegeException e) {
-                            log.error(e.toString(), e);
-                        }
+                     // There are some ERRORs, so we leave it ERROR...
+                    log.info("There have been some ERRORs with Tasks_results, so I am going to set the Task ID" + task.getId() + " to ERROR.");
+                    task.setStatus(TaskStatus.ERROR);
+                    task.setEndTime(new Date(System.currentTimeMillis()));
+                    taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
+                    //Set its GENERATE dependencies as dirty
+                    //TODO: Hmm...what to do in case of exceptions?
+                    try {
+                    	setAllGenerateDependenciesToNone(dependenciesResolver.listDependencies(task.getExecServiceId()), task.getFacilityId());
+                    } catch (ServiceNotExistsException e) {
+                        log.error(e.toString(), e);
+                    } catch (InternalErrorException e) {
+                        log.error(e.toString(), e);
+                    } catch (PrivilegeException e) {
+                        log.error(e.toString(), e);
                     }
                 }
-            } else if (taskResults.size() > destinations.size()) {
-                log.error("There are more Task_results then destinations. so I am going to set the Task ID" + task.getId() + " to ERROR.");
-                task.setStatus(TaskStatus.ERROR);
-                task.setEndTime(new Date(System.currentTimeMillis()));
-                taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
-                //Set its GENERATE dependencies as dirty
-                //TODO: Hmm...what to do in case of exceptions?
-                try {
-                  setAllGenerateDependenciesToNone(dependenciesResolver.listDependencies(task.getExecServiceId()), task.getFacilityId());
-                } catch (ServiceNotExistsException e) {
-                  log.error(e.toString(), e);
-                } catch (InternalErrorException e) {
-                  log.error(e.toString(), e);
-                } catch (PrivilegeException e) {
-                  log.error(e.toString(), e);
-                }
-            } else {
-                final long THREE_HOUR = 1000 * 60 * 60 * 3;
-                long timeDifference = System.currentTimeMillis() - task.getStartTime().getTime();
-                if(timeDifference > THREE_HOUR) {
-                  //
-                  // WARNING!!
-                  //
-                  // This can be dangerous. We are not sure if there isn't any slave script running for this task.
-                  //
-                  log.error("There are only " + taskResults.size() + " Task_results for Task ID" + task.getId() + ", but task is in processing too long, so switch task to ERROR");
-                  task.setStatus(TaskStatus.ERROR);
-                  task.setEndTime(new Date(System.currentTimeMillis()));
-                  taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
-                  //Set its GENERATE dependencies as dirty
-                  //TODO: Hmm...what to do in case of exceptions?
-                  try {
-                    setAllGenerateDependenciesToNone(dependenciesResolver.listDependencies(task.getExecServiceId()), task.getFacilityId());
-                  } catch (ServiceNotExistsException e) {
-                    log.error(e.toString(), e);
-                  } catch (InternalErrorException e) {
-                    log.error(e.toString(), e);
-                  } catch (PrivilegeException e) {
-                    log.error(e.toString(), e);
-                  }
-                }
+            }
+        } else if (taskResults.size() > destinations.size()) {
+            log.error("There are more Task_results then destinations. so I am going to set the Task ID" + task.getId() + " to ERROR.");
+            task.setStatus(TaskStatus.ERROR);
+            task.setEndTime(new Date(System.currentTimeMillis()));
+            taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
+            //Set its GENERATE dependencies as dirty
+            //TODO: Hmm...what to do in case of exceptions?
+            try {
+              setAllGenerateDependenciesToNone(dependenciesResolver.listDependencies(task.getExecServiceId()), task.getFacilityId());
+            } catch (ServiceNotExistsException e) {
+              log.error(e.toString(), e);
+            } catch (InternalErrorException e) {
+              log.error(e.toString(), e);
+            } catch (PrivilegeException e) {
+              log.error(e.toString(), e);
+            }
+        } else {
+            final long THREE_HOUR = 1000 * 60 * 60 * 3;
+            long timeDifference = System.currentTimeMillis() - task.getStartTime().getTime();
+            if(timeDifference > THREE_HOUR) {
+              //
+              // WARNING!!
+              //
+              // This can be dangerous. We are not sure if there isn't any slave script running for this task.
+              //
+              log.error("There are only " + taskResults.size() + " Task_results for Task ID" + task.getId() + ", but task is in processing too long, so switch task to ERROR");
+              task.setStatus(TaskStatus.ERROR);
+              task.setEndTime(new Date(System.currentTimeMillis()));
+              taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
+              //Set its GENERATE dependencies as dirty
+              //TODO: Hmm...what to do in case of exceptions?
+              try {
+                setAllGenerateDependenciesToNone(dependenciesResolver.listDependencies(task.getExecServiceId()), task.getFacilityId());
+              } catch (ServiceNotExistsException e) {
+                log.error(e.toString(), e);
+              } catch (InternalErrorException e) {
+                log.error(e.toString(), e);
+              } catch (PrivilegeException e) {
+                log.error(e.toString(), e);
+              }
+            }
 
-                log.info("There are only " + taskResults.size() + " Task_results for Task ID" + task.getId() + ", so we ain't gonna do anything.");
-                // Well, we ain't gonna do anything bro...
-                // TODO: Time out...
+            log.info("There are only " + taskResults.size() + " Task_results for Task ID" + task.getId() + ", so we ain't gonna do anything.");
+            // Well, we ain't gonna do anything bro...
+            // TODO: Time out...
+        }
+    }
+*/
+    
+    private void checkFinishedTasks() {
+    	// report finished tasks back to scheduler
+    	// clear all tasks we are done with (ie. DONE, ERROR with no recurrence left)
+    }
+    
+    private void rescheduleErrorTasks() {
+        log.info("I am gonna list tasks in ERROR and reschedule if necessary...");
+
+        for(Task task : schedulingPool.getErrorTasks()) {
+            if (task.getEndTime() == null) {
+                log.error("RECOVERY FROM INCONSISTENT STATE: ERROR task does not have end_time! Setting end_time to task.getDelay + 1.");
+                // getDelay is in minutes, therefore we multiply it with 60*1000
+                Date endTime = new Date(System.currentTimeMillis() - ((task.getDelay() + 1) * 60000));
+                task.setEndTime(endTime);
+            }
+            int howManyMinutesAgo = (int) (System.currentTimeMillis() - task.getEndTime().getTime()) / 1000 / 60;
+            log.info("TASK [" + task + "] in ERROR state completed " + howManyMinutesAgo + " minutes ago.");
+            // check and set recurrence
+            int recurrence = task.getRecurrence() - 1;
+            if(recurrence < 0) {
+            	// no more retries, sorry
+            	log.info("TASK [ " + task + "] in ERROR state has no more retries, bailing out.");
+            	continue;
+            }
+            task.setRecurrence(recurrence);
+            //If DELAY time has passed, we reschedule...
+            if (howManyMinutesAgo >= task.getDelay()) {
+                //check if service is still assigned on facility
+                try {
+					List<Service> assignedServices = perun.getServicesManager().getAssignedServices(perunSession, task.getFacility());
+	                  if(assignedServices.contains(task.getExecService().getService())) {
+	                        ExecService execService = task.getExecService();
+	                        Facility facility = task.getFacility();
+	                        log.info("TASK [" + task + "] in ERROR state is going to be rescheduled: taskScheduler.propagateService(execService:ID " + execService.getId() + ", new Date(System.currentTimeMillis()), facility:ID " + facility.getId() + ");");
+	                        taskScheduler.propagateService(task, new Date(System.currentTimeMillis()));
+	                        log.info("TASK [" + task + "] in ERROR state has been rescheduled.");
+
+	                        //Also (to be sure) reschedule all Tasks that depend on this Task
+	                        //
+	                        //While engine starts in state GEN = ERROR, SEND = DONE  =>  GEN will be rescheduled but without this SEND will never be propagated
+	                        List<Task> dependentTasks = dependenciesResolver.getDependants(task);
+	                        if(dependentTasks != null) {
+	                          for(Task dependantTask : dependentTasks) {
+	                            taskScheduler.propagateService(dependantTask, new Date(System.currentTimeMillis()));
+	                            log.info("{} was rescheduled because it depends on {}", dependantTask, task);
+	                          }
+	                        }
+	                  } else {
+	                      //delete this tasks (SEND and GEN) because service is no longer assigned to facility
+	                  }
+				} catch (FacilityNotExistsException e) {
+	                  log.error("Consistency error - found task for non-existing facility. {}", e);
+				} catch (InternalErrorException e) {
+	                  log.error("{}", e);
+				} catch (PrivilegeException e) {
+	                  log.error("Consistency error. {}", e);
+				}
             }
         }
-
-        log.info("I am gonna list tasks in ERROR and reschedule if necessary...");
+        
+/* 
+ * Original implementation:
+        
         //TODO: Take into account Recurrence!
         for (Task task : taskManager.listAllTasksInState(TaskStatus.ERROR, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")))) {
             if (task.getEndTime() == null) {
@@ -293,9 +540,29 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
                 }
             }
         }
+  */  	
+    }
 
-        //list all tasks in processing and planed and check if any have beeen running for too long.
-        List<Task> suspiciousTasks = taskManager.listAllTasksInState(TaskStatus.PROCESSING, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
+    private void endStuckTasks() {
+    	//list all tasks in processing and planned and check if any have beeen running for too long.
+    	List<Task> suspiciousTasks = schedulingPool.getProcessingTasks();
+    	suspiciousTasks.addAll(schedulingPool.getPlannedTasks());
+    	
+    	for(Task task: suspiciousTasks) {
+            //count how many minutes the task stays in one state - if the state is PLANNED count it from when it was scheduled ; if it is PROCESSING count it from when it started
+            int howManyMinutesAgo = (int) (System.currentTimeMillis() - ( task.getStatus().equals(TaskStatus.PLANNED) ? task.getSchedule() : task.getStartTime() ).getTime()) / 1000 / 60;
+
+            //If too much time has passed something is broken
+            if (howManyMinutesAgo >= 60) {
+                      log.error("ERROR: Task is stuck in PLANNED or PROCESSING state. Switching it to ERROR. {}", task);
+                      task.setEndTime(new Date(System.currentTimeMillis()));
+                      schedulingPool.setTaskStatus(task, TaskStatus.ERROR);
+            }
+    		
+    	}
+/*
+ * 
+    	List<Task> suspiciousTasks = taskManager.listAllTasksInState(TaskStatus.PROCESSING, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
         suspiciousTasks.addAll(taskManager.listAllTasksInState(TaskStatus.PLANNED, Integer.parseInt(propertiesBean.getProperty("engine.unique.id"))));
         for (Task task : suspiciousTasks) {
             //count how many minutes the task stays in one state - if the state is PLANNED count it from when it was scheduled ; if it is PROCESSING count it from when it started
@@ -303,15 +570,37 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
 
             //If too much time has passed something is broken
             if (howManyMinutesAgo >= 60) {
-                      log.error("ERROR: Task is stucked in PLANNED or PROCESSING state. Switching it to ERROR. {}", task);
+                      log.error("ERROR: Task is stuck in PLANNED or PROCESSING state. Switching it to ERROR. {}", task);
                       task.setEndTime(new Date(System.currentTimeMillis()));
                       task.setStatus(TaskStatus.ERROR);
                       taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
             }
         }
+*/        
+    }
 
+    private void rescheduleOldDoneTasks() {
         //Reschedule SEND tasks in DONE that haven't been running for quite a while
-        for(Task task : taskManager.listAllTasksInState(TaskStatus.DONE, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")))) {
+
+    	for(Task task : schedulingPool.getDoneTasks()) {
+            //skip GEN tasks
+            if(task.getExecService().getExecServiceType().equals(ExecService.ExecServiceType.GENERATE)) continue;
+            
+            Date twoDaysAgo = new Date(System.currentTimeMillis() - 1000 * 60 * 24 * 2);
+            if(task.getEndTime().before(twoDaysAgo)) {
+              //reschedule the task
+              try {
+                taskScheduler.propagateService(task, new Date(System.currentTimeMillis()));
+                log.info("TASK [" + task + "] wasn't propagated for more then 2 days. Going to schedule it for propagation now.");
+              } catch (InternalErrorException e) {
+                log.error("Rescheduling of task which wasn't propagated for more than 2 days failed. {}, Exception: {}", task, e);
+              } 
+            }
+    		
+    	}
+/*
+ *     	
+    	for(Task task : taskManager.listAllTasksInState(TaskStatus.DONE, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")))) {
             //skip GEN tasks
             if(task.getExecService().getExecServiceType().equals(ExecService.ExecServiceType.GENERATE)) continue;
             
@@ -327,9 +616,9 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
             }
 
         }
-
+ */
     }
-
+    
     @Override
     public Statistics getStatistics() {
         throw new UnsupportedOperationException("Nah...");
@@ -346,7 +635,8 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
         //TODO: Optimize this for cycle out with a 1 clever SQL query ???
         //^ setAllGenerateDependenciesToNone(ExecService execService, Facility facility) ??? 
         //TODO:ADD TEST CASE!!!
-        for (ExecService dependencyToBeSetDirty : dependencies) {
+/* TODO: rewrite this
+    	for (ExecService dependencyToBeSetDirty : dependencies) {
             if (dependencyToBeSetDirty.getExecServiceType().equals(ExecServiceType.GENERATE)) {
                 Task taskToBeSetDirty = taskManager.getTask(dependencyToBeSetDirty.getId(), facilityId, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
                 if (taskToBeSetDirty != null) {
@@ -355,8 +645,10 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
                 }
             }
         }
+  */
     }
 
+/*  
     public TaskManager getTaskManager() {
         return taskManager;
     }
@@ -380,7 +672,8 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     public void setEngineManager(EngineManager engineManager) {
         this.engineManager = engineManager;
     }
-
+*/
+    
     public DependenciesResolver getDependenciesResolver() {
         return dependenciesResolver;
     }

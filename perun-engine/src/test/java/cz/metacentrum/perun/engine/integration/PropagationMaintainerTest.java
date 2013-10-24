@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -96,6 +97,7 @@ public class PropagationMaintainerTest extends BaseTest {
         }
     }
 
+    @IfProfileValue(name="test-groups", values=("integration-tests"))
     @Test
     public void testExecutingRealMessage() throws InterruptedException {
         String message = "event|1|[Tue Aug 30 12:29:23 CEST 2011][clockworkorange][Member:[id='36712'] added to Group:[id='16326', name='falcon', description='null'].]";

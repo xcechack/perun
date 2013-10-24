@@ -11,7 +11,7 @@
     </appender>
     
    <appender name="FILE" class="org.apache.log4j.DailyRollingFileAppender">
-        <param name="File" value="/var/log/perunv3/perun-engine.log"/>
+        <param name="File" value="/var/log/perunv3/Perun-Engine.log"/>
         <param name="DatePattern" value="'.'yyyy-MM-dd"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern"
@@ -20,7 +20,7 @@
     </appender>
     
     <appender name="FILE_JMS" class="org.apache.log4j.DailyRollingFileAppender">
-        <param name="File" value="/var/log/perunv3/perun-engine-jms.log"/>
+        <param name="File" value="/var/log/perunv3/Perun-Engine-JMS.log"/>
         <param name="DatePattern" value="'.'yyyy-MM-dd"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern"
@@ -29,12 +29,12 @@
     </appender>
 
     <logger name="cz.metacentrum.perun.engine.jms">
-        <level value="INFO"/>
+        <level value="DEBUG"/>
         <appender-ref ref="FILE_JMS"/>
     </logger>
 
     <root>
-        <level value="INFO"/>
+        <level value="DEBUG"/>
         <appender-ref ref="FILE"/>
     </root>
 

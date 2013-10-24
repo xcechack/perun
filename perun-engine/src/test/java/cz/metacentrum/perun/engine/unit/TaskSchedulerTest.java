@@ -1,4 +1,4 @@
-package cz.metacentrum.perun.engine.scheduling;
+package cz.metacentrum.perun.engine.unit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -14,11 +14,14 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import cz.metacentrum.perun.engine.BaseTest;
+import cz.metacentrum.perun.engine.scheduling.SchedulingPool;
+import cz.metacentrum.perun.engine.scheduling.TaskScheduler;
 import cz.metacentrum.perun.engine.service.EngineManager;
 import cz.metacentrum.perun.rpclib.Rpc;
 import cz.metacentrum.perun.taskslib.model.ExecService;
@@ -69,6 +72,7 @@ public class TaskSchedulerTest extends BaseTest {
     /**
      * @see https://projekty.ics.muni.cz/perunv3/trac/wiki/PerunEngineDispatcherController#Singleservice
      */
+    @IfProfileValue(name="test-groups", values=("unit-tests-old"))
     @Test
     public void testSingleService() {
         try {
@@ -100,6 +104,7 @@ public class TaskSchedulerTest extends BaseTest {
     /**
      * @see https://projekty.ics.muni.cz/perunv3/trac/wiki/PerunEngineDispatcherController#Basicdependency
      */
+    @IfProfileValue(name="test-groups", values=("unit-tests-old"))
     @Test
     public void testBasicDependencyService() {
         try {
@@ -156,6 +161,7 @@ public class TaskSchedulerTest extends BaseTest {
      * @see https://projekty.ics.muni.cz/perunv3/trac/wiki/PerunEngineDispatcherController#Onesendonlydependency
      */
     //evil
+    @IfProfileValue(name="test-groups", values=("unit-tests-old"))
     @Test
     public void testOneSendOnlyDependency() {
         try {
@@ -235,6 +241,7 @@ public class TaskSchedulerTest extends BaseTest {
      * @see https://projekty.ics.muni.cz/perunv3/trac/wiki/PerunEngineDispatcherController#Onefulldependency
      */
     //evil
+    @IfProfileValue(name="test-groups", values=("unit-tests-old"))
     @Test
     public void testOneFullDependency() {
         try {
@@ -348,6 +355,7 @@ public class TaskSchedulerTest extends BaseTest {
     /**
      * @see https://projekty.ics.muni.cz/perunv3/trac/wiki/PerunEngineDispatcherController#Multipledependencies
      */
+    @IfProfileValue(name="test-groups", values=("unit-tests-old"))
     @Test
     public void testMultipleDependencies() {
         try {

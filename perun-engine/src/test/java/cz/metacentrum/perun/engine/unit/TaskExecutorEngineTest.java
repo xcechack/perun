@@ -1,4 +1,4 @@
-package cz.metacentrum.perun.engine.scheduling;
+package cz.metacentrum.perun.engine.unit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,8 @@ import cz.metacentrum.perun.core.api.exceptions.PrivilegeException;
 import cz.metacentrum.perun.core.api.exceptions.ServiceExistsException;
 import cz.metacentrum.perun.core.api.exceptions.ServiceNotExistsException;
 import cz.metacentrum.perun.engine.BaseTest;
+import cz.metacentrum.perun.engine.scheduling.TaskExecutorEngine;
+import cz.metacentrum.perun.engine.scheduling.TaskScheduler;
 import cz.metacentrum.perun.engine.service.EngineManager;
 import cz.metacentrum.perun.rpclib.Rpc;
 import cz.metacentrum.perun.taskslib.dao.TaskResultDao;
@@ -652,6 +655,7 @@ public class TaskExecutorEngineTest extends BaseTest {
         Thread.sleep(5000);
     }
     
+    @IfProfileValue(name="test-groups", values=("unit-tests-old"))
     @Test
     public void testGenerateError() throws OwnerNotExistsException, ServiceExistsException, InternalErrorException, PrivilegeException, InterruptedException {
         // Setup

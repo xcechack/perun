@@ -2,10 +2,7 @@ package cz.metacentrum.perun.engine.scheduling;
 
 import java.util.List;
 
-import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
-import cz.metacentrum.perun.core.api.exceptions.PrivilegeException;
-import cz.metacentrum.perun.core.api.exceptions.ServiceNotExistsException;
-import cz.metacentrum.perun.taskslib.model.ExecService;
+import cz.metacentrum.perun.taskslib.model.Task;
 
 /**
  * 
@@ -15,9 +12,10 @@ import cz.metacentrum.perun.taskslib.model.ExecService;
  */
 public interface DependenciesResolver {
 
-    List<ExecService> listDependencies(ExecService execService) throws ServiceNotExistsException, InternalErrorException, PrivilegeException;
+	List<Task> getDependencies(Task task);
 
-    List<ExecService> listDependantServices(ExecService execService) throws ServiceNotExistsException, InternalErrorException, PrivilegeException;
+	List<Task> getDependants(Task task);
 
-    List<ExecService> listDependencies(int execServiceId) throws ServiceNotExistsException, InternalErrorException, PrivilegeException;
+	void addDependency(Task task, int dependency);
+
 }

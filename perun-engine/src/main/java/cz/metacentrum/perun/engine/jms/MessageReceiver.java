@@ -27,6 +27,8 @@ import cz.metacentrum.perun.engine.processing.EventProcessor;
 public class MessageReceiver implements Runnable {
     private final static Logger log = LoggerFactory.getLogger(MessageReceiver.class);
 
+    private final static int TOO_LONG = 15000;
+    
     private MessageConsumer messageConsumer = null;
     private Queue queue = null;
     private boolean running = true;
@@ -125,7 +127,11 @@ public class MessageReceiver implements Runnable {
                 }
             }
             if (waitTime > 0) {
-                try {
+            	if(waitTime > TOO_LONG) {
+            		// gonna be back after trying to reinitialize the connection
+            		return;
+            	}
+            	try {
                     Thread.sleep(waitTime);
                 } catch (InterruptedException e) {
                     log.error(e.toString(), e);

@@ -19,4 +19,7 @@ public interface ExecutorEngineWorker extends Runnable {
 
     void setFacility(Facility facility);
 
+    void setResultListener(TaskResultListener resultListener);
+    
+    TaskResultListener getResultListener();
 }

@@ -1,17 +1,30 @@
 package cz.metacentrum.perun.dispatcher.processing.impl;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskExecutor;
 
+import cz.metacentrum.perun.core.api.Facility;
+import cz.metacentrum.perun.core.api.Pair;
+import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
+import cz.metacentrum.perun.core.api.exceptions.PrivilegeException;
+import cz.metacentrum.perun.core.api.exceptions.ServiceNotExistsException;
+import cz.metacentrum.perun.dispatcher.exceptions.InvalidEventMessageException;
 import cz.metacentrum.perun.dispatcher.jms.DispatcherQueue;
 import cz.metacentrum.perun.dispatcher.jms.DispatcherQueuePool;
 import cz.metacentrum.perun.dispatcher.model.Event;
+import cz.metacentrum.perun.dispatcher.processing.EventExecServiceResolver;
 import cz.metacentrum.perun.dispatcher.processing.EventLogger;
 import cz.metacentrum.perun.dispatcher.processing.EventProcessor;
 import cz.metacentrum.perun.dispatcher.processing.EventQueue;
 import cz.metacentrum.perun.dispatcher.processing.SmartMatcher;
+import cz.metacentrum.perun.dispatcher.scheduling.SchedulingPool;
+import cz.metacentrum.perun.taskslib.model.ExecService;
+import cz.metacentrum.perun.taskslib.model.Task;
+import cz.metacentrum.perun.taskslib.model.Task.TaskStatus;
 
 /**
  * 
@@ -33,9 +46,12 @@ public class EventProcessorImpl implements EventProcessor {
 	private SmartMatcher smartMatcher;
 	@Autowired
 	private TaskExecutor taskExecutor;
-
 	private EvProcessor evProcessor;
-
+	@Autowired
+	private EventExecServiceResolver eventExecServiceResolver;
+	@Autowired
+	private SchedulingPool schedulingPool;
+	
 	public class EvProcessor implements Runnable {
 		private boolean running = true;
 
@@ -59,7 +75,7 @@ public class EventProcessorImpl implements EventProcessor {
 							}
 							if (smartMatcher.doesItMatch(event, dispatcherQueue)) {
 								orphan = false;
-								dispatcherQueue.sendMessage(event.toString());
+								createTask(dispatcherQueue, event);
 								eventLogger.logEvent(event, dispatcherQueue.getClientID());
 								if (log.isDebugEnabled()) {
 									long timeStamp2 = System.currentTimeMillis();
@@ -87,6 +103,26 @@ public class EventProcessorImpl implements EventProcessor {
 				}
 			}
 		}
+		
+		private void createTask(DispatcherQueue dispatcherQueue, Event event) throws ServiceNotExistsException, InvalidEventMessageException, InternalErrorException, PrivilegeException {
+			// MV: this was the original behaviour
+			//dispatcherQueue.sendMessage(event.toString());
+
+			// Resolve the services in event, send the resulting <ExecService, Facility> pairs to engine
+			List<Pair<List<ExecService>, Facility>> resolvedServices = eventExecServiceResolver.parseEvent(event.toString());
+			for(Pair<List<ExecService>, Facility> service : resolvedServices) {
+				//String facility = service.getRight().serializeToString();
+				for(ExecService execService: service.getLeft()) {
+					//dispatcherQueue.sendMessage("[" + facility + "][" + execService.getId() + "]");
+					// TODO: create Task and add it to the pool to be scheduled
+					Task task = new Task();
+					task.setFacility(service.getRight());
+					task.setExecService(execService);
+					task.setStatus(TaskStatus.NONE);
+					schedulingPool.addToPool(task);
+				}
+			}
+		}
 
 		public void stop() {
 			running = false;
@@ -96,7 +132,8 @@ public class EventProcessorImpl implements EventProcessor {
 	@Override
 	public void startPocessingEvents() {
 		try {
-			taskExecutor.execute(new EvProcessor());
+			evProcessor = new EvProcessor();
+			taskExecutor.execute(evProcessor);
 		} catch (Exception e) {
 			log.error(e.toString(), e);
 		}

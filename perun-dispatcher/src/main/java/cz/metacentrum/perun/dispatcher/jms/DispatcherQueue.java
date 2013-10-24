@@ -26,6 +26,12 @@ public class DispatcherQueue {
 	private MessageProducer producer;
 	private int clientID;
 	private String queueName;
+
+	// this one is to allow for mock objects which extend this class 
+	public DispatcherQueue(int clientID, String queueName) {		
+		this.clientID = clientID;
+		this.queueName = queueName;
+	}
 	
 	public DispatcherQueue(int clientID, String queueName, Session session) {
 		this.clientID = clientID;

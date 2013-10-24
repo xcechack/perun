@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       xsi:schemaLocation="
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
+">
+
+    <bean id="vo1" class="cz.metacentrum.perun.core.api.Vo">
+		<constructor-arg name="id" value="2136" /> <!-- NOT USED -->
+		<constructor-arg name="name" value="testVo" />
+		<constructor-arg name="shortName" value="testVo" />
+    </bean>
+
+    <bean id="group1" class="cz.metacentrum.perun.core.api.Group">
+		<constructor-arg name="name" value="falcon" />
+		<constructor-arg name="description" value="" />
+    </bean>
+
+    <bean id="user1" class="cz.metacentrum.perun.core.api.User">
+        <constructor-arg name="id" value="3524" /><!-- NOT USED -->
+        <constructor-arg name="firstName" value="testJmeno" />
+        <constructor-arg name="lastName" value="testPrijmeni" />
+        <constructor-arg name="middleName" value="" />
+        <constructor-arg name="titleBefore" value="" />
+        <constructor-arg name="titleAfter" value="" />
+    </bean>
+    
+	<bean id="facility1" class="cz.metacentrum.perun.core.api.Facility">
+	    <constructor-arg name="id" value="0" />
+	    <constructor-arg name="name" value="testFacility" />
+	    <constructor-arg name="type" value="host" />
+	</bean>
+	
+	<bean id="resource1" class="cz.metacentrum.perun.core.api.Resource">
+	    <constructor-arg name="id" value="0" />
+	    <constructor-arg name="name" value="testResource" />
+	    <constructor-arg name="description" value="test resource" />
+	    <constructor-arg name="facilityId" value="0" />
+	 </bean>
+	 
+	<bean id="service1" class="cz.metacentrum.perun.core.api.Service">
+	    <constructor-arg name="id" value="0" />
+	    <constructor-arg name="name" value="testService" />
+	</bean>
+	
+	<bean id="owner1" class="cz.metacentrum.perun.core.api.Owner">
+	    <constructor-arg name="id" value="0" />
+	    <constructor-arg name="name" value="testOwner" />
+	    <constructor-arg name="contact" value="do not contact me" />
+	    <constructor-arg name="type" value="technical" />
+	</bean>
+	
+	<bean id="execservice1" class="cz.metacentrum.perun.taskslib.model.ExecService">
+	    <property name="defaultDelay" value="1" />
+	    <property name="script" value="" />
+	    <property name="enabled" value="true" />
+	    <property name="execServiceType" value="SEND" />
+	    <property name="service" ref="service1" />
+	</bean>
+	
+	<!-- this one has to be created by API, there is no way we can know the id's of referenced objects
+    <bean id="member1" class="cz.metacentrum.perun.core.api.Member" >
+        <constructor-arg name="id" value="36712" />
+        <constructor-arg name="userId" value="3524" />
+        <property name="voId" value="2136" />
+        <property name="status" value="ACTIVE" /> 
+    </bean>
+     -->
+     
+     <bean id="testDataPopulator" class="cz.metacentrum.perun.dispatcher.TestDataSourcePopulator" init-method="initDb">
+     </bean>
+
+</beans>

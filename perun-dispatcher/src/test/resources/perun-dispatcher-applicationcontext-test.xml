@@ -11,7 +11,9 @@ http://www.springframework.org/schema/context http://www.springframework.org/sch
 http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
 http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
 http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
-">
+"
+		default-lazy-init="true"
+>
 
     <!-- Enable @Transactional support -->
     <tx:annotation-driven/>
@@ -40,7 +42,7 @@ http://www.springframework.org/schema/task http://www.springframework.org/schema
     <context:component-scan base-package="cz.metacentrum.perun.dispatcher"/>
     <context:component-scan base-package="cz.metacentrum.perun.controller"/>
     
-    <!-- Properties Bean -->
+	<!-- Properties Bean -->
 	<bean id="propertiesBean" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
        	<property name="locations">
       		<list>
@@ -57,54 +59,57 @@ http://www.springframework.org/schema/task http://www.springframework.org/schema
    	</bean>
 
 	<bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
-  		<property name="corePoolSize" value="10" />
+		<property name="corePoolSize" value="10" />
   		<property name="maxPoolSize" value="50" />
   		<property name="queueCapacity" value="100" />
 	</bean>
+		
+	<beans profile="integration,production">
     
-    <!-- BEGIN Quartz tasks -->	
-	<bean id="maintenanceJob" class="org.springframework.scheduling.quartz.JobDetailBean">
-		<property name="jobClass" value="cz.metacentrum.perun.dispatcher.job.MaintenanceJob" />
-		<property name="jobDataAsMap">
-			<map>
-				<entry key="dispatcherManager" value-ref="dispatcherManager" />
-			</map>
-		</property>
-	</bean>
+    	<!-- BEGIN Quartz tasks -->	
+		<bean id="maintenanceJob" class="org.springframework.scheduling.quartz.JobDetailBean">
+			<property name="jobClass" value="cz.metacentrum.perun.dispatcher.job.MaintenanceJob" />
+			<property name="jobDataAsMap">
+				<map>
+					<entry key="dispatcherManager" value-ref="dispatcherManager" />
+				</map>
+			</property>
+		</bean>
 	
-	<bean id="checkInJob" class="org.springframework.scheduling.quartz.JobDetailBean">
-		<property name="jobClass" value="cz.metacentrum.perun.dispatcher.job.CheckInJob" />
-		<property name="jobDataAsMap">
-			<map>
-				<entry key="dispatcherManager" value-ref="dispatcherManager" />
-			</map>
-		</property>
-	</bean>
+		<bean id="checkInJob" class="org.springframework.scheduling.quartz.JobDetailBean">
+			<property name="jobClass" value="cz.metacentrum.perun.dispatcher.job.CheckInJob" />
+			<property name="jobDataAsMap">
+				<map>
+					<entry key="dispatcherManager" value-ref="dispatcherManager" />
+				</map>
+			</property>
+		</bean>
 
-	<bean id="maintenanceJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
-		<property name="jobDetail" ref="maintenanceJob" />
-		<!-- Every 20 minutes -->
-		<!--<property name="cronExpression" value="0 0/20 * * * ?" /> -->
-		<!-- Every 5 seconds -->
-		<property name="cronExpression" value="0/5 * * * * ?" />
-	</bean>
+		<bean id="maintenanceJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+			<property name="jobDetail" ref="maintenanceJob" />
+			<!-- Every 20 minutes -->
+			<!--<property name="cronExpression" value="0 0/20 * * * ?" /> -->
+			<!-- Every 5 seconds -->
+			<property name="cronExpression" value="0/5 * * * * ?" />
+		</bean>
 	
-	<bean id="checkInJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
-		<property name="jobDetail" ref="checkInJob" />
-		<!-- Every 3 minutes -->
-		<property name="cronExpression" value="0 0/5 * * * ?" />
-		<!-- Every 10 seconds -->
-		<!-- property name="cronExpression" value="0/10 * * * * ?" /-->
-	</bean>
+		<bean id="checkInJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+			<property name="jobDetail" ref="checkInJob" />
+			<!-- Every 3 minutes -->
+			<property name="cronExpression" value="0 0/5 * * * ?" />
+			<!-- Every 10 seconds -->
+			<!-- property name="cronExpression" value="0/10 * * * * ?" /-->
+		</bean>
 	
-	<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
-		<property name="triggers">
-			<list>
-				<!--<ref bean="maintenanceJobTrigger" />-->
-				<ref bean="checkInJobTrigger" />
-			</list>
-		</property>
-	</bean>  
-	<!-- END Quartz tasks -->	
-           
+		<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+			<property name="triggers">
+				<list>
+					<!--<ref bean="maintenanceJobTrigger" />-->
+					<ref bean="checkInJobTrigger" />
+				</list>
+			</property>
+		</bean>  
+		<!-- END Quartz tasks -->	
+	</beans>          
+
 </beans>

@@ -19,6 +19,7 @@ import cz.metacentrum.perun.engine.scheduling.DependenciesResolver;
 import cz.metacentrum.perun.engine.scheduling.PropagationMaintainer;
 import cz.metacentrum.perun.engine.scheduling.SchedulingPool;
 import cz.metacentrum.perun.engine.scheduling.TaskScheduler;
+import cz.metacentrum.perun.engine.scheduling.TaskStatusManager;
 import cz.metacentrum.perun.taskslib.dao.TaskResultDao;
 import cz.metacentrum.perun.taskslib.model.ExecService;
 import cz.metacentrum.perun.taskslib.model.ExecService.ExecServiceType;
@@ -32,29 +33,79 @@ import cz.metacentrum.perun.taskslib.service.TaskManager;
  * 
  */
 @org.springframework.stereotype.Service(value = "taskScheduler")
-@Transactional
+// @Transactional
 public class TaskSchedulerImpl implements TaskScheduler {
 
     private final static Logger log = LoggerFactory.getLogger(TaskSchedulerImpl.class);
 
     @Autowired
-    private TaskManager taskManager;
-    @Autowired
     private SchedulingPool schedulingPool;
+    @Autowired
+    private TaskStatusManager taskStatusManager;
     @Autowired
     private DependenciesResolver dependenciesResolver;
     @Autowired
     private DenialsResolver denialsResolver;
     @Autowired
+    private Properties propertiesBean;
+
+/*
+    @Autowired
+    private TaskManager taskManager;
+    @Autowired
     private TaskResultDao taskResultDao;
     @Autowired
     private PropagationMaintainer propagationMaintainer;
-    @Autowired
-    private Properties propertiesBean;
+*/    
+
+	@Override
+	public void propagateService(Task task, Date time)
+			throws InternalErrorException {
+		schedulingPool.setTaskStatus(task, TaskStatus.PLANNED);
+		taskStatusManager.clearTaskStatus(task);
+		task.setSchedule(time);
+	}
+
+	@Override
+    public void rescheduleTask(Task task) {
+        // TODO: Logic regarding the Task status etc...
+//        taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
+    }
 
     @Override
+    public void processPool() throws InternalErrorException {
+/*
+    	for (Pair<ExecService, Facility> pair : schedulingPool.emptyPool()) {
+            log.debug("Propagating ExecService:Facility : " + pair.getLeft().getId() + ":" + pair.getRight().getId());
+            propagateService(pair.getLeft(), new Date(System.currentTimeMillis()), pair.getRight());
+        }
+*/
+    	for(Task task : schedulingPool.getNewTasks()) {
+    		log.debug("Propagating ExecService:Facility : " + task.getExecServiceId() + ":" + task.getFacilityId());
+    		propagateService(task, new Date(System.currentTimeMillis()));
+    	}
+    }
+
+    @Override
+    public int getPoolSize() {
+        return schedulingPool.getSize();
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see cz.metacentrum.perun.engine.scheduling.TaskScheduler#propagateService(cz.metacentrum.perun.taskslib.model.ExecService, java.util.Date, cz.metacentrum.perun.core.api.Facility)
+     *
+     * This basically takes (execService, facility) pair and after some sanity checks (ie. is the service enabled, 
+     * is there a task running already, are dependant tasks running) it recursively schedules the dependencies
+     * (adds them to the scheduling pool) and when it finds task ready to run, it puts it to the PLANNED state
+     * to be picked up by TaskExecutorEngine.
+     * 
+     */
+    @Deprecated
+    @Override
     public void propagateService(ExecService execService, Date time, Facility facility) throws InternalErrorException {
-        log.debug("Facility to be processed: " + facility.getId() + ", ExecService to be processed: " + execService.getId());
+/*
+    	log.debug("Facility to be processed: " + facility.getId() + ", ExecService to be processed: " + execService.getId());
 
         // TODO: EDIT: Denials are to be resolved in TaskExecutorEngine class as well (for each destination)
 
@@ -260,6 +311,7 @@ public class TaskSchedulerImpl implements TaskScheduler {
                                 task.setRecurrence(execService.getDefaultRecurrence());
                                 task.setSchedule(time);
                                 task.setStatus(TaskStatus.PLANNED);
+                                task.setType(getTaskType(execService, facility));
                                 manipulateTasks(execService, facility, task);
                             } else {
                                 // If we can not proceed, we just end here.
@@ -276,6 +328,7 @@ public class TaskSchedulerImpl implements TaskScheduler {
                             task.setRecurrence(execService.getDefaultRecurrence());
                             task.setSchedule(time);
                             task.setStatus(TaskStatus.PLANNED);
+                            task.setType(getTaskType(execService, facility));
                             manipulateTasks(execService, facility, task);
                         } else {
                             throw new IllegalArgumentException("Unknown ExecService type. Expected GENERATE or SEND.");
@@ -292,35 +345,18 @@ public class TaskSchedulerImpl implements TaskScheduler {
         } else {
             log.debug("   No, execService ID:" + execService.getId() + " is not enabled globally.");
         }
-
+*/
     }
 
     @Override
+    @Deprecated
     public void propagateServices(Pair<List<ExecService>, Facility> servicesFacility) throws InternalErrorException {
         for (ExecService execService : servicesFacility.getLeft()) {
             propagateService(execService, new Date(System.currentTimeMillis()), servicesFacility.getRight());
         }
     }
 
-    @Override
-    public void rescheduleTask(Task task) {
-        // TODO: Logic regarding the Task status etc...
-        taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
-    }
-
-    @Override
-    public void processPool() throws InternalErrorException {
-        for (Pair<ExecService, Facility> pair : schedulingPool.emptyPool()) {
-            log.debug("Propagating ExecService:Facility : " + pair.getLeft().getId() + ":" + pair.getRight().getId());
-            propagateService(pair.getLeft(), new Date(System.currentTimeMillis()), pair.getRight());
-        }
-    }
-
-    @Override
-    public int getPoolSize() {
-        return schedulingPool.getSize();
-    }
-
+/*
     @Transactional
     private void manipulateTasks(ExecService execService, Facility facility, Task task) {
         Task storedTask = taskManager.getTask(execService, facility, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
@@ -342,7 +378,8 @@ public class TaskSchedulerImpl implements TaskScheduler {
             taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
         }
     }
-
+*/
+    
     private void scheduleItAndWait(ExecService dependency, Facility facility, ExecService execService) throws InternalErrorException {
         // We are gonna propagate this dependency...
         propagateService(dependency, new Date(System.currentTimeMillis()), facility);
@@ -357,6 +394,7 @@ public class TaskSchedulerImpl implements TaskScheduler {
         schedulingPool.addToPool(new Pair<ExecService, Facility>(execService, facility));
     }
 
+/*
     public TaskManager getTaskManager() {
         return taskManager;
     }
@@ -364,7 +402,7 @@ public class TaskSchedulerImpl implements TaskScheduler {
     public void setTaskManager(TaskManager taskManager) {
         this.taskManager = taskManager;
     }
-
+*/
     public SchedulingPool getSchedulingPool() {
         return schedulingPool;
     }
@@ -389,6 +427,7 @@ public class TaskSchedulerImpl implements TaskScheduler {
         this.denialsResolver = denialsResolver;
     }
 
+/*    
     public TaskResultDao getTaskResultDao() {
         return taskResultDao;
     }
@@ -404,7 +443,8 @@ public class TaskSchedulerImpl implements TaskScheduler {
     public void setPropagationMaintainer(PropagationMaintainer propagationMaintainer) {
         this.propagationMaintainer = propagationMaintainer;
     }
-
+*/
+    
     public Properties getPropertiesBean() {
         return propertiesBean;
     }

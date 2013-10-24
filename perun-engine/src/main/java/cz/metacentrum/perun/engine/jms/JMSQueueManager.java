@@ -22,6 +22,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskExecutor;
 
+import cz.metacentrum.perun.taskslib.model.Task;
+
 /**
  * 
  * @author Michal Karm Babacek JavaDoc coming soon...
@@ -108,7 +110,8 @@ public class JMSQueueManager {
 
             // Execute receiver
             messageReceiver.setUp("queue" + propertiesBean.getProperty("engine.unique.id"), session);
-            taskExecutorMessageProcess.execute(messageReceiver);
+            //taskExecutorMessageProcess.execute(messageReceiver);
+            messageReceiver.run();
             receivingMessages = true;
             // TODO: Put a while loop here? As same as in the "public void initiateConnection() {...}" ?
         } catch (Exception e) {
@@ -117,7 +120,34 @@ public class JMSQueueManager {
 
     }
 
-    public void sendGoodByeAndClose() {
+    public void start() {
+    	taskExecutorMessageProcess.execute(new Runnable() {
+    		public void run() {
+    			while(!systemInitiated || receivingMessages) {
+    					initiateConnection();	
+    					registerForReceivingMessages();
+    					// tear down the session, connection etc.
+    					try {
+    							session.close();
+    							connection.stop();
+    							connection.close();
+    					} catch (Exception e) {
+    						log.error(e.toString(), e);
+    					}
+    					needToConnect = true;
+    	    			receivingMessages = messageReceiver.isRunning();
+    			}
+    		}
+    	});
+    	
+    }
+    
+	public void reportFinishedTask(Task task) throws JMSException {
+		TextMessage message = session.createTextMessage("task finished:" + task.getId());
+		producer.send(message);
+	}
+
+	public void sendGoodByeAndClose() {
         try {
             TextMessage message = session.createTextMessage("goodbye:" + propertiesBean.getProperty("engine.unique.id"));
             // Step 8. Send the Message

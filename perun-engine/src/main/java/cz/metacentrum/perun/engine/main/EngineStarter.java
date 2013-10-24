@@ -26,7 +26,8 @@ public class EngineStarter {
 
     public EngineStarter() {
         try {
-            springCtx = new ClassPathXmlApplicationContext("classpath:perun-engine-applicationcontext.xml");
+            springCtx = new ClassPathXmlApplicationContext("classpath:perun-engine-applicationcontext.xml",
+            											   "classpath:perun-engine-applicationcontext-jdbc.xml");
             this.engineManager = springCtx.getBean("engineManager", EngineManager.class);
         } catch (Exception e) {
             log.error("Application context loading error.", e);

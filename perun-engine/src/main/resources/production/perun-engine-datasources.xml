@@ -8,7 +8,7 @@ http://www.springframework.org/schema/beans http://www.springframework.org/schem
 http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
 http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
 ">
-    <context:property-placeholder location="${perun.jdbc}"/>
+    <context:property-placeholder location="file:/etc/perunv3/jdbc.properties"/>
 
     <!-- DataSource implementation -->    
     <bean id="dataSource" class="org.apache.tomcat.dbcp.dbcp.BasicDataSource" destroy-method="close">
@@ -19,8 +19,7 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
         <property name="maxWait" value="30000"/> 
         <property name="maxIdle" value="20" />
         <property name="maxActive" value="20" />
-        <!-- Oracle  <property name="validationQuery" value="select 1 from dual" /> -->
-        <!-- Postgres  <property name="validationQuery" value="select 1" /> -->
+        <property name="validationQuery" value="select 1 from dual" />
         <property name="removeAbandoned" value="true" />
         <property name="logAbandoned" value="true" />
         <property name="removeAbandonedTimeout" value="60" />

@@ -6,8 +6,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Date;
 import java.util.Properties;
-import cz.metacentrum.perun.engine.scheduling.impl.StreamGobbler;
 
+import cz.metacentrum.perun.engine.scheduling.impl.StreamGobbler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +20,7 @@ import cz.metacentrum.perun.core.api.Destination;
 import cz.metacentrum.perun.core.api.Facility;
 import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
 import cz.metacentrum.perun.engine.scheduling.ExecutorEngineWorker;
+import cz.metacentrum.perun.engine.scheduling.TaskResultListener;
 import cz.metacentrum.perun.taskslib.dao.TaskResultDao;
 import cz.metacentrum.perun.taskslib.model.ExecService;
 import cz.metacentrum.perun.taskslib.model.ExecService.ExecServiceType;
@@ -33,10 +34,14 @@ import cz.metacentrum.perun.taskslib.service.TaskManager;
 @Scope(value = "prototype")
 public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
     private final static Logger log = LoggerFactory.getLogger(ExecutorEngineWorkerImpl.class);
+
+    private TaskResultListener resultListener;
     @Autowired
     private TaskManager taskManager;
+/*
     @Autowired
     private TaskResultDao taskResultDao;
+*/
     private Task task;
     private Facility facility;
     private ExecService execService;
@@ -100,7 +105,9 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
             ProcessBuilder pb = new ProcessBuilder(execService.getScript(), facility.getName() + '-' + facility.getType(), destination.getDestination(), destination.getType());
             pb.directory(new File("send")); ///FIXME get from config file
 
+            
             try {
+
                 Process process = pb.start();
 
                 StreamGobbler errorGobbler = new StreamGobbler(process.getErrorStream());
@@ -127,10 +134,13 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
                 taskResult.setStatus(returnCode == 0 ? TaskResultStatus.DONE : TaskResultStatus.ERROR);
                 taskResult.setTimestamp(new Date(System.currentTimeMillis()));
 
-                taskResultDao.insertNewTaskResult(taskResult, getEngineId());
+                //taskResultDao.insertNewTaskResult(taskResult, getEngineId());
 
                 if(taskResult.getStatus().equals(TaskStatus.ERROR)) {
                   log.info("SEND task failed. Ret code " + returnCode + ". STDOUT: {}  STDERR: {}. Task: " + task, stdout, stderr);
+                  resultListener.onTaskDestinationError(task, destination, taskResult);
+                } else {
+                	resultListener.onTaskDestinationDone(task, destination, taskResult);
                 }
 
             } catch (Exception e) {
@@ -143,11 +153,14 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
                 taskResult.setDestinationId(destination.getId());
                 taskResult.setStatus(TaskResultStatus.ERROR);
                 taskResult.setTimestamp(new Date(System.currentTimeMillis()));
+                resultListener.onTaskDestinationError(task, destination, taskResult);
+/*
                 try {
-                    taskResultDao.insertNewTaskResult(taskResult, getEngineId());
+                	taskResultDao.insertNewTaskResult(taskResult, getEngineId());
                 } catch (InternalErrorException e1) {
                     log.error(e.toString(), e);
                 }
+*/
             } finally {
                   String ret = returnCode == -1 ? "unknown" : String.valueOf(returnCode);
                   log.debug("SEND task ended. Ret code " + ret + ". STDOUT: {}  STDERR: {}. Task: " + task, stdout, stderr);
@@ -168,6 +181,7 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
         this.taskManager = taskManager;
     }
 
+/*
     public TaskResultDao getTaskResultDao() {
         return taskResultDao;
     }
@@ -175,7 +189,7 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
     public void setTaskResultDao(TaskResultDao taskResultDao) {
         this.taskResultDao = taskResultDao;
     }
-
+*/
     public Task getTask() {
         return task;
     }
@@ -222,4 +236,12 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
         }
         return engineId;
     }
+
+	public TaskResultListener getResultListener() {
+		return resultListener;
+	}
+
+	public void setResultListener(TaskResultListener resultListener) {
+		this.resultListener = resultListener;
+	}
 }

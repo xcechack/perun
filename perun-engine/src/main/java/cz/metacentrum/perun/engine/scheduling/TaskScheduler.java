@@ -18,11 +18,14 @@ public interface TaskScheduler {
 
     void propagateService(ExecService execService, Date time, Facility facility) throws InternalErrorException;
 
-    void propagateServices(Pair<List<ExecService>, Facility> servicesFacility) throws InternalErrorException;
+	void propagateService(Task task, Date date) throws InternalErrorException;
+
+	void propagateServices(Pair<List<ExecService>, Facility> servicesFacility) throws InternalErrorException;
 
     void rescheduleTask(Task task);
 
     void processPool() throws InternalErrorException;
 
     int getPoolSize();
+
 }

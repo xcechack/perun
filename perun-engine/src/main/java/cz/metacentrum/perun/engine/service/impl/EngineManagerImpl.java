@@ -70,8 +70,9 @@ public class EngineManagerImpl implements EngineManager {
 
     @Override
     public void startMessaging() {
-        jmsQueueManager.initiateConnection();
-        jmsQueueManager.registerForReceivingMessages();
+        //jmsQueueManager.initiateConnection();
+        //jmsQueueManager.registerForReceivingMessages();
+    	jmsQueueManager.start();
     }
 
     @Override

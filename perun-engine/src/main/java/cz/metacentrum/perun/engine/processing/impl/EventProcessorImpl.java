@@ -15,11 +15,12 @@ import cz.metacentrum.perun.core.api.exceptions.PrivilegeException;
 import cz.metacentrum.perun.core.api.exceptions.ServiceNotExistsException;
 import cz.metacentrum.perun.engine.exceptions.InvalidEventMessageException;
 import cz.metacentrum.perun.engine.model.Pair;
-import cz.metacentrum.perun.engine.processing.EventExecServiceResolver;
+import cz.metacentrum.perun.engine.processing.EventParser;
 import cz.metacentrum.perun.engine.processing.EventProcessor;
 import cz.metacentrum.perun.engine.scheduling.SchedulingPool;
 import cz.metacentrum.perun.engine.scheduling.TaskScheduler;
 import cz.metacentrum.perun.taskslib.model.ExecService;
+import cz.metacentrum.perun.taskslib.model.Task;
 
 /**
  * 
@@ -32,7 +33,7 @@ public class EventProcessorImpl implements EventProcessor {
     private final static Logger log = LoggerFactory.getLogger(EventProcessorImpl.class);
 
     @Autowired
-    private EventExecServiceResolver eventExecServiceResolver;
+    private EventParser eventParser;
 
     @Autowired
     private SchedulingPool schedulingPool;
@@ -48,87 +49,66 @@ public class EventProcessorImpl implements EventProcessor {
         log.info("Current pool size BEFORE event processing:" + schedulingPool.getSize());
 
         log.debug("Event " + event + " is going to be resolved...");
-        List<Pair<List<ExecService>, Facility>> results = new ArrayList<Pair<List<ExecService>, Facility>>();
+
+        Task task = null;
+        try {
+            task = eventParser.parseEvent(event);
+
+        } catch (InvalidEventMessageException e) {
+            log.error(e.toString());
+        } catch (ServiceNotExistsException e) {
+            log.error(e.toString());
+        } catch (InternalErrorException e) {
+            log.error(e.toString());
+        } catch (PrivilegeException e) {
+            log.error(e.toString());
+        }
 
         //FIXME: Disabled because it can cause race condition. See RT#33803
         if (false) {
             //if (event.contains("forceit")) {  // TODO: Move string constant to a properties file
 
-            try {
-                results = eventExecServiceResolver.parseEvent(event);
+            log.debug("\t Facility[" + task.getFacility() + "]");
+            log.debug("\t Resolved ExecService[" + task.getExecService() + "]");
 
-                log.info("FORCEIT: Returned Pair<List<ExecService>, Facility> pairs:" + results.size());
-            } catch (InvalidEventMessageException e) {
-                log.error(e.toString());
-            } catch (ServiceNotExistsException e) {
-                log.error(e.toString());
-            } catch (InternalErrorException e) {
-                log.error(e.toString());
-            } catch (PrivilegeException e) {
-                log.error(e.toString());
+            if (task != null && task.getFacility() != null && task.getExecService() != null) {
+            	//log.debug("SCHEDULING vie Force Service Propagation: ExecService[" + execService.getId() + "] : Facility[" + results.getRight() + "]");
+            	schedulingPool.addToPool(task);
+            	final Task ntask = task;
+            	taskExecutorEventProcessor.execute(new Runnable() {
+                	@Override
+                	public void run() {
+                		try {
+                			taskScheduler.propagateService(ntask, new Date(System.currentTimeMillis()));
+                		} catch (InternalErrorException e) {
+                			log.error(e.toString());
+                		}
+                	}
+                });
             }
-
-            for (final Pair<List<ExecService>, Facility> resultTest : results) {
-                log.debug("\t Facility[" + resultTest.getRight() + "]");
-                log.debug("\t Resolved ExecServices[" + resultTest.getLeft() + "]");
-
-                if (resultTest != null && resultTest.getLeft() != null && resultTest.getRight() != null) {
-                    for (final ExecService execService : resultTest.getLeft()) {
-                        log.debug("SCHEDULING vie Force Service Propagation: ExecService[" + execService.getId() + "] : Facility[" + resultTest.getRight() + "]");
-                        schedulingPool.addToPool(new Pair<ExecService, Facility>(execService, resultTest.getRight()));
-                        taskExecutorEventProcessor.execute(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    taskScheduler.propagateService(execService, new Date(System.currentTimeMillis()), resultTest.getRight());
-                                } catch (InternalErrorException e) {
-                                    log.error(e.toString());
-                                }
-                            }
-                        });
-                    }
-                }
-                log.debug("POOL SIZE:" + schedulingPool.getSize());
-            }
+            log.debug("POOL SIZE:" + schedulingPool.getSize());
         } else {
 
-            try {
-                results = eventExecServiceResolver.parseEvent(event);
 
-                log.info("NORMAL: Returned Pair<List<ExecService>, Facility> pairs:" + results.size());
-            } catch (InvalidEventMessageException e) {
-                log.error(e.toString());
-            } catch (ServiceNotExistsException e) {
-                log.error(e.toString());
-            } catch (InternalErrorException e) {
-                log.error(e.toString());
-            } catch (PrivilegeException e) {
-                log.error(e.toString());
+            log.debug("\t Facility[" + task.getFacility() + "]");
+            log.debug("\t Resolved ExecService[" + task.getExecService() + "]");
+
+            if (task != null && task.getFacility() != null && task.getExecService() != null) {
+            	//log.debug("ADD to POOL: ExecService[" + results.getLeft().getId() + "] : Facility[" + results.getRight() + "]");
+            	schedulingPool.addToPool(task);
             }
-
-            for (Pair<List<ExecService>, Facility> resultTest : results) {
-                log.debug("\t Facility[" + resultTest.getRight() + "]");
-                log.debug("\t Resolved ExecServices[" + resultTest.getLeft() + "]");
-
-                if (resultTest != null && resultTest.getLeft() != null && resultTest.getRight() != null) {
-                    for (ExecService execService : resultTest.getLeft()) {
-                        log.debug("ADD to POOL: ExecService[" + execService.getId() + "] : Facility[" + resultTest.getRight() + "]");
-                        schedulingPool.addToPool(new Pair<ExecService, Facility>(execService, resultTest.getRight()));
-                    }
-                }
-                log.debug("POOL SIZE:" + schedulingPool.getSize());
-            }
+            log.debug("POOL SIZE:" + schedulingPool.getSize());
 
         }
         log.info("Current pool size AFTER event processing:" + schedulingPool.getSize());
     }
 
-    public void setEventExecServiceResolver(EventExecServiceResolver eventExecServiceResolver) {
-        this.eventExecServiceResolver = eventExecServiceResolver;
+    public void setEventParser(EventParser eventParser) {
+        this.eventParser = eventParser;
     }
 
-    public EventExecServiceResolver getEventExecServiceResolver() {
-        return eventExecServiceResolver;
+    public EventParser getEventParser() {
+        return eventParser;
     }
 
     public void setSchedulingPool(SchedulingPool schedulingPool) {

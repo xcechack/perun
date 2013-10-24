@@ -12,20 +12,17 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.transaction.annotation.Transactional;
 
 import cz.metacentrum.perun.core.api.Destination;
-import cz.metacentrum.perun.core.api.Facility;
-import cz.metacentrum.perun.core.api.exceptions.FacilityNotExistsException;
 import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
-import cz.metacentrum.perun.core.api.exceptions.PrivilegeException;
-import cz.metacentrum.perun.core.api.exceptions.ServiceNotExistsException;
+import cz.metacentrum.perun.engine.scheduling.DependenciesResolver;
 import cz.metacentrum.perun.engine.scheduling.ExecutorEngineWorker;
+import cz.metacentrum.perun.engine.scheduling.PropagationMaintainer;
+import cz.metacentrum.perun.engine.scheduling.SchedulingPool;
 import cz.metacentrum.perun.engine.scheduling.TaskExecutorEngine;
-import cz.metacentrum.perun.engine.service.EngineManager;
-import cz.metacentrum.perun.rpclib.Rpc;
-import cz.metacentrum.perun.taskslib.model.ExecService;
-import cz.metacentrum.perun.taskslib.model.ExecService.ExecServiceType;
+import cz.metacentrum.perun.engine.scheduling.TaskResultListener;
+import cz.metacentrum.perun.engine.scheduling.TaskStatusManager;
+import cz.metacentrum.perun.engine.scheduling.TaskStatus.TaskDestinationStatus;
 import cz.metacentrum.perun.taskslib.model.Task;
 import cz.metacentrum.perun.taskslib.model.Task.TaskStatus;
-import cz.metacentrum.perun.taskslib.service.TaskManager;
 
 /**
  * 
@@ -37,28 +34,46 @@ import cz.metacentrum.perun.taskslib.service.TaskManager;
 public class TaskExecutorEngineImpl implements TaskExecutorEngine {
     private final static Logger log = LoggerFactory.getLogger(TaskExecutorEngineImpl.class);
 
+/*
     @Autowired
     private TaskManager taskManager;
+    @Autowired
+    private TaskResultDao taskResultDao;
+ */
     @Autowired
     private TaskExecutor taskExecutorGenWorkers;
     @Autowired
     private TaskExecutor taskExecutorSendWorkers;
     @Autowired
     private BeanFactory beanFactory;
+/* absolutely do not wantn this, its a unit testing nightmare
     @Autowired
     private EngineManager engineManager;
+ */
     @Autowired
     private Properties propertiesBean;
-
+    @Autowired
+    private DependenciesResolver dependencyResolver;
+    @Autowired
+	private TaskStatusManager taskStatusManager;
+    @Autowired
+    private SchedulingPool schedulingPool;
+    
     @Override
     public void beginExecuting() {
-        int executorWorkersCreated = 0;
+    	// run all tasks in scheduled state
+    	Date now = new Date(System.currentTimeMillis());
+    	for(Task task : schedulingPool.getPlannedTasks()) {
+    		if(task.getSchedule().after(now)) {
+    			runTask(task);
+    		}
+    	}
+   /*
+    	int executorWorkersCreated = 0;
         log.debug("Begin execution process...");
         List<Task> tasks = null;
         Date olderThen = null;
         Date youngerThen = null;
-        // TODO: Just playing with the dates, for now, we are gonna list Tasks in an interval (-1 year, +1 hour) from NOW.
-        // TODO: method: listTasksScheduledBefore(youngerThen)
         long hour = 3600000;
         long year = hour * 8760;
         olderThen = new Date(System.currentTimeMillis() - year);
@@ -88,52 +103,18 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
                         taskExecutorGenWorkers.execute(executorEngineWorker);
                     } else if (execService.getExecServiceType().equals(ExecServiceType.SEND)) {
                         log.debug(   "I'm gonna create worker for ExecService SEND, ID:" + execService.getId());
-                        Facility facility = null;
-                        List<Destination> destinations = null;
-                        try {
-                            facility = task.getFacility();
-                            destinations = Rpc.ServicesManager.getDestinations(engineManager.getRpcCaller(), execService.getService(), facility);
-
-                            for (Destination destination : destinations) {
-                                ExecutorEngineWorker executorEngineWorker = createExecutorEngineWorker();
-                                executorWorkersCreated++;
-                                executorEngineWorker.setTask(task);
-                                executorEngineWorker.setFacility(facility);
-                                executorEngineWorker.setExecService(execService);
-                                executorEngineWorker.setDestination(destination);
-                                //A dedicated executor for SEND
-                                taskExecutorSendWorkers.execute(executorEngineWorker);
-                            }
-
-                        } catch (FacilityNotExistsException e) {
-                            log.error("Skipping this one due to:" + e.toString(), e);
-                            task.setStatus(TaskStatus.ERROR);
-                            taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
-                            continue;
-                        } catch (InternalErrorException e) {
-                            log.error("Skipping this one due to:" + e.toString(), e);
-                            task.setStatus(TaskStatus.ERROR);
-                            task.setEndTime(new Date(System.currentTimeMillis()));
-                            taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
-                            continue;
-                        } catch (PrivilegeException e) {
-                            log.error("Skipping this one due to:" + e.toString(), e);
-                            task.setStatus(TaskStatus.ERROR);
-                            task.setEndTime(new Date(System.currentTimeMillis()));
-                            taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
-                            continue;
-                        } catch (ServiceNotExistsException e) {
-                            log.error("Skipping this one due to:" + e.toString(), e);
-                            task.setStatus(TaskStatus.ERROR);
-                            task.setEndTime(new Date(System.currentTimeMillis()));
-                            taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
-                            continue;
-                        } catch (Exception e) {
-                            log.error("Skipping this one due to:" + e.toString(), e);
-                            task.setStatus(TaskStatus.ERROR);
-                            task.setEndTime(new Date(System.currentTimeMillis()));
-                            taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
-                            continue;
+                        switch(task.getType()) {
+                        case SERIAL:
+                        	executorWorkersCreated = startSerialWorkers(task);
+                        	break;
+                        case PARALLEL:
+                        	executorWorkersCreated = startParallelWorkers(task);
+                        	break;
+                        default:
+                        	break;
+                        }
+                        if(executorWorkersCreated < 0) {
+                        	continue;
                         }
                     } else {
                         throw new IllegalArgumentException("ExecService type has to be either SEND or GENERATE.");
@@ -144,20 +125,178 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
             log.debug("There are no tasks between dates [" + olderThen + "] and [" + youngerThen + "]");
         }
         log.info("Executing process ended. Created workers:" + executorWorkersCreated);
+  */
     }
 
-    protected ExecutorEngineWorker createExecutorEngineWorker() {
-        return (ExecutorEngineWorker) this.beanFactory.getBean("executorEngineWorker");
+    
+    /**
+     * Put the task into PROCESSING state and create workers for all destinations that have satisfied 
+     * dependencies (or no dependencies at all).
+     * 
+     * @param task Task to start.
+     * 
+     */
+    private void runTask(Task task) {
+    	schedulingPool.setTaskStatus(task, TaskStatus.PROCESSING);
+    	task.setStartTime(new Date(System.currentTimeMillis()));
+    	List<Task> dependencies = dependencyResolver.getDependencies(task);
+    	// TODO: handle GEN tasks with no destinations
+    	for(Destination destination : taskStatusManager.getTaskStatus(task).getWaitingDestinations()) {
+    		// check if all the dependency destinations are done
+        	boolean proceed = true;
+			try {
+				for(Task dependency : dependencies) {
+					if(taskStatusManager.getTaskStatus(dependency).getDestinationStatus(destination) != TaskDestinationStatus.DONE) {
+						proceed = false;
+					}	
+				}
+			} catch (InternalErrorException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        	if(proceed) {
+        		try {
+					taskStatusManager.getTaskStatus(task).setDestinationStatus(destination, TaskDestinationStatus.PROCESSING);
+				} catch (InternalErrorException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+        		startWorker(task, destination);
+        	}
+    	}
     }
+    
 
-    public TaskManager getTaskManager() {
+    /**
+     * 
+     */
+    private void startWorker(Task task, Destination destination) {
+        ExecutorEngineWorker executorEngineWorker = createExecutorEngineWorker();
+        executorEngineWorker.setTask(task);
+        executorEngineWorker.setFacility(task.getFacility());
+        executorEngineWorker.setExecService(task.getExecService());
+        executorEngineWorker.setDestination(destination);
+        taskExecutorSendWorkers.execute(executorEngineWorker);
+    }
+    
+    /**
+     * Get one destination that has not been tried yet and start worker for it.
+     * 
+     * @param task
+     * @return 
+     */
+/*
+    private int startSerialWorkers(Task task) {
+    	List<Destination> destinations = null;
+    	List<TaskResult> results = null;
+    	try {
+    		// get destinations for which there are no task results
+    		destinations = Rpc.ServicesManager.getDestinations(engineManager.getRpcCaller(), 
+															   task.getExecService().getService(), 
+															   task.getFacility());
+    		results = taskResultDao.getTaskResultsByTask(task.getId());
+    		for(TaskResult result: results) {
+    			destinations.remove(result.getDestination());
+    		}
+    		if(destinations.isEmpty()) {
+    			return 0;
+    		}
+    		Destination destination = destinations.get(0);
+            ExecutorEngineWorker executorEngineWorker = createExecutorEngineWorker();
+            executorEngineWorker.setTask(task);
+            executorEngineWorker.setFacility(task.getFacility());
+            executorEngineWorker.setExecService(task.getExecService());
+            executorEngineWorker.setDestination(destination);
+            //A dedicated executor for SEND
+            taskExecutorSendWorkers.execute(executorEngineWorker);
+    	} catch (ServiceNotExistsException e) {
+			// TODO Auto-generated catch block
+		} catch (FacilityNotExistsException e) {
+			// TODO Auto-generated catch block
+		} catch (PrivilegeException e) {
+			// TODO Auto-generated catch block
+		} catch (InternalErrorException e) {
+			// TODO Auto-generated catch block
+		}
+    	return 1;
+    }
+*/
+    /**
+     * Start workers for all destinations defined for given task.
+     * 
+     * @param task
+     * @return
+     */
+/*
+    private int startParallelWorkers(Task task) {
+    	int executorWorkersCreated = 0;
+    	Facility facility = null;
+        List<Destination> destinations = null;
+        try {
+            facility = task.getFacility();
+            destinations = Rpc.ServicesManager.getDestinations(engineManager.getRpcCaller(), task.getExecService().getService(), facility);
+
+            for (Destination destination : destinations) {
+                ExecutorEngineWorker executorEngineWorker = createExecutorEngineWorker();
+                executorWorkersCreated++;
+                executorEngineWorker.setTask(task);
+                executorEngineWorker.setFacility(facility);
+                executorEngineWorker.setExecService(task.getExecService());
+                executorEngineWorker.setDestination(destination);
+                //A dedicated executor for SEND
+                taskExecutorSendWorkers.execute(executorEngineWorker);
+            }
+
+        } catch (FacilityNotExistsException e) {
+            log.error("Skipping this one due to:" + e.toString(), e);
+            task.setStatus(TaskStatus.ERROR);
+            taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
+            return -1;
+        } catch (InternalErrorException e) {
+            log.error("Skipping this one due to:" + e.toString(), e);
+            task.setStatus(TaskStatus.ERROR);
+            task.setEndTime(new Date(System.currentTimeMillis()));
+            taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
+            return -1;
+        } catch (PrivilegeException e) {
+            log.error("Skipping this one due to:" + e.toString(), e);
+            task.setStatus(TaskStatus.ERROR);
+            task.setEndTime(new Date(System.currentTimeMillis()));
+            taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
+            return -1;
+        } catch (ServiceNotExistsException e) {
+            log.error("Skipping this one due to:" + e.toString(), e);
+            task.setStatus(TaskStatus.ERROR);
+            task.setEndTime(new Date(System.currentTimeMillis()));
+            taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
+            return -1;
+        } catch (Exception e) {
+            log.error("Skipping this one due to:" + e.toString(), e);
+            task.setStatus(TaskStatus.ERROR);
+            task.setEndTime(new Date(System.currentTimeMillis()));
+            taskManager.updateTask(task, Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
+            return -1;
+        }
+        return executorWorkersCreated;
+	}
+*/
+
+	protected ExecutorEngineWorker createExecutorEngineWorker() {
+		ExecutorEngineWorker worker =  (ExecutorEngineWorker) this.beanFactory.getBean("executorEngineWorker");
+		worker.setResultListener((TaskResultListener) taskStatusManager);
+		return worker;
+	}
+
+/*
+	public TaskManager getTaskManager() {
         return taskManager;
     }
 
     public void setTaskManager(TaskManager taskManager) {
         this.taskManager = taskManager;
     }
-
+*/
+	
     public BeanFactory getBeanFactory() {
         return beanFactory;
     }
@@ -166,6 +305,7 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
         this.beanFactory = beanFactory;
     }
 
+/*
     public EngineManager getEngineManager() {
         return engineManager;
     }
@@ -173,7 +313,8 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
     public void setEngineManager(EngineManager engineManager) {
         this.engineManager = engineManager;
     }
-
+*/
+    
     public Properties getPropertiesBean() {
         return propertiesBean;
     }
@@ -197,4 +338,5 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
     public void setTaskExecutorSendWorkers(TaskExecutor taskExecutorSendWorkers) {
         this.taskExecutorSendWorkers = taskExecutorSendWorkers;
     }
+
 }

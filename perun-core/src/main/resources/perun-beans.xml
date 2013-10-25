@@ -17,6 +17,15 @@ http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
 http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
 http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.0.xsd
 ">
+
+   <!-- FIXME  hack, hackiti hack - inject properties bean into static class Utils
+              (creates another bean, that is never used)
+              The point is to stop Utils from complaining about non-existent /etc/perunv3/perun.properties.
+   -->
+   <bean class="cz.metacentrum.perun.core.impl.Utils" factory-method="setProperties" scope="singleton">
+      <constructor-arg ref="properties" />        
+   </bean>
+
     <import resource="classpath:perun-transaction-manager.xml"/>
     
     <aop:config>
@@ -54,7 +63,7 @@ http://www.springframework.org/schema/task http://www.springframework.org/schema
         <tx:method name="*" read-only="true" rollback-for="Exception" />
       </tx:attributes>
     </tx:advice>
-
+ 
     <!--FIXME   hack ktery donuti spring zavolat statickou metodu -->
     <bean class="cz.metacentrum.perun.core.blImpl.AuthzResolverBlImpl" factory-method="setAuthzResolverImpl" scope="singleton">
       <constructor-arg ref="authzResolverImpl" />
@@ -260,5 +269,36 @@ http://www.springframework.org/schema/task http://www.springframework.org/schema
     </bean>
 
     <import resource="classpath:perun-core-trace-log.xml"/>
+    
+    <bean id="properties" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+        <property name="locations">
+                       <list>
+                           <value>file:/etc/perunv3/perun.properties</value>
+                       </list>            
+        </property>
+        <property name="ignoreResourceNotFound" value="true" />
+               <!--  these are just defaults not meant for actual deployment, but enough to make tests run happily -->
+        <property name="properties">
+            <props>
+                               <prop key="perun.admins">perunTests, perunController, perunEngine, perunRegistrar, perunSynchronizer, perunCabinet</prop>
+                               <prop key="perun.grouper.toplevelstem">perunMeta</prop>
+                               <prop key="perun.service.principals">perunv3/engine@META</prop>
+                               <prop key="perun.engine.principals">perunv3/engine@META</prop>
+                               <prop key="perun.synchronizer.principals">perunSynchronizer</prop>
+                               <prop key="perun.registrar.principals">perunv3-registrar@META</prop>
+                               <prop key="perun.notification.principals">perunNotifications</prop>
+                               <prop key="perun.rpc.principal">perunRpc</prop>
+                               <prop key="perun.db.type">hsqldb</prop>
+                               <prop key="perun.group.synchronization.interval">1</prop>
+                               <prop key="perun.group.synchronization.timeout">10</prop>
+                               <prop key="perun.rpc.powerusers">perunv3-registrar@META</prop>
+                               <prop key="perun.perun.db.name">v3dev</prop>
+                               <prop key="perun.rt.url">https://rt3.cesnet.cz/rt/REST/1.0/ticket/new</prop>
+                               <prop key="perun.rt.serviceuser.username">perunv3-rt</prop>
+                               <prop key="perun.rt.serviceuser.password">password</prop>
+                               <prop key="perun.passwordManager.program">/usr/local/bin/perun.passwordManager</prop>
+            </props>
+        </property>
+    </bean>
     
 </beans>

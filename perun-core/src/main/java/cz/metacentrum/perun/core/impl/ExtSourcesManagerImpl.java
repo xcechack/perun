@@ -2,6 +2,7 @@ package cz.metacentrum.perun.core.impl;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -371,7 +372,14 @@ public class ExtSourcesManagerImpl implements ExtSourcesManagerImplApi {
   public void loadExtSourcesDefinitions(PerunSession sess) {
     try {    
       // Load the XML file
-      BufferedInputStream is = new BufferedInputStream(new FileInputStream(ExtSourcesManager.CONFIGURATIONFILE));
+      BufferedInputStream is;
+      try {
+    	  is = new BufferedInputStream(new FileInputStream(ExtSourcesManager.CONFIGURATIONFILE));
+      } catch(FileNotFoundException e) {
+    	  return;
+      } catch(Exception e) {
+          throw new InternalErrorException("Cannot load configuration file " + ExtSourcesManager.CONFIGURATIONFILE);
+      }
       if (is == null) {
         throw new InternalErrorException("Cannot load configuration file " + ExtSourcesManager.CONFIGURATIONFILE);
       }

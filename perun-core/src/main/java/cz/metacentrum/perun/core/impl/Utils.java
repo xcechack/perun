@@ -52,6 +52,7 @@ public class Utils {
 	private final static Logger log = LoggerFactory.getLogger(Utils.class);	
 	private final static Pattern patternForCommonNameParsing = Pattern.compile("(([\\w]*. )*)([\\p{L}-']+) ([\\p{L}-']+)[, ]*(.*)");
 	public final static String configurationsLocations = "/etc/perunv3/";
+	private static Properties properties;
 	
 	/**
 	 * Replaces dangerous characters.
@@ -110,24 +111,26 @@ public class Utils {
 		log.trace("Entering getPropertyFromConfiguration: propertyName='" +  propertyName + "'");
 		notNull(propertyName, "propertyName");
 		
-		// Load properties file with configuration
-		Properties properties = new Properties();
-		try {
-			// Get the path to the perun.properties file
-		  BufferedInputStream is = new BufferedInputStream(new FileInputStream(Utils.configurationsLocations + "perun.properties"));
-			properties.load(is);
-			is.close();
-
-			String property = properties.getProperty(propertyName);
-			if (property == null) {
-				throw new InternalErrorException("Property " + propertyName + " cannot be found in the configuration file");
+		if(Utils.properties == null) {
+			// Load properties file with configuration
+			Properties properties = new Properties();
+			try {
+				// Get the path to the perun.properties file
+				BufferedInputStream is = new BufferedInputStream(new FileInputStream(Utils.configurationsLocations + "perun.properties"));
+				properties.load(is);
+				is.close();
+			} catch (FileNotFoundException e) {
+				throw new InternalErrorException("Cannot find perun.properties file", e);
+			} catch (IOException e) {
+				throw new InternalErrorException("Cannot read perun.properties file", e);
 			}
-			return property;
-		} catch (FileNotFoundException e) {
-			throw new InternalErrorException("Cannot find perun.properties file", e);
-		} catch (IOException e) {
-			throw new InternalErrorException("Cannot read perun.properties file", e);
+			Utils.properties = properties;
 		}
+		String property = Utils.properties.getProperty(propertyName);
+		if (property == null) {
+			throw new InternalErrorException("Property " + propertyName + " cannot be found in the configuration file");
+		}
+		return property;
 	}
 
     /**
@@ -313,6 +316,8 @@ public class Utils {
       query = "select " + sequenceName + ".nextval from dual";
     } else if (dbType.equals("postgresql")) {
       query = "select nextval('" + sequenceName + "')";
+    } else if (dbType.equals("hsqldb")) {
+    	query = "call next value for " + sequenceName + ";";
     } else {
       throw new InternalErrorException("Unsupported DB type");
     }
@@ -499,4 +504,9 @@ public class Utils {
         copyTo.setValueModifiedBy(copyFrom.getValueModifiedBy());
         return copyTo;
     }
+
+	public static Properties setProperties(Properties properties) {
+		Utils.properties = properties;
+		return Utils.properties;
+	}
 }

@@ -30,7 +30,6 @@ import cz.metacentrum.perun.engine.scheduling.TaskScheduler;
 //import cz.metacentrum.perun.engine.scheduling.TaskStatus;
 import cz.metacentrum.perun.engine.scheduling.TaskStatus.TaskDestinationStatus;
 import cz.metacentrum.perun.engine.service.EngineManager;
-import cz.metacentrum.perun.rpclib.Rpc;
 import cz.metacentrum.perun.taskslib.dao.TaskResultDao;
 import cz.metacentrum.perun.taskslib.model.ExecService;
 import cz.metacentrum.perun.taskslib.model.ExecService.ExecServiceType;

@@ -32,7 +32,7 @@ create table vos (
 
 create table ext_sources (
    id integer not null,
-   name varchar(255) not null,
+   name varchar(256) not null,
    type varchar(64),
    created_at date  default now not null,
    created_by varchar(1024) default user not null,
@@ -103,7 +103,7 @@ create table hosts (
    id integer not null,
    hostname varchar(128) not null,
    facility_id integer not null,
-   dsc varchar(1023),
+   dsc varchar(1024),
    created_at date  default now not null,
    created_by varchar(1024) default user not null,
    modified_at date default now not null,
@@ -132,7 +132,7 @@ create table exec_services (
    default_delay integer not null,
    enabled char(1) not null,
    default_recurrence integer not null,
-   script varchar(255) not null,
+   script varchar(256) not null,
    type varchar(10) not null,
    created_at date  default now not null,
    created_by varchar(1024) default user not null,
@@ -145,7 +145,7 @@ create table exec_services (
 
 create table destinations (
     id integer not null,
-    destination varchar(1023),
+    destination varchar(1024) not null,
     type varchar(20) not null,
     created_at date  default now not null,
     created_by varchar(1024) default user not null,
@@ -199,16 +199,17 @@ create table attr_names (
     default_attr_id integer,
     attr_name varchar(384) not null,
     friendly_name varchar(128) not null,
-    namespace varchar(255) not null,
-    type varchar(255) not null,
-    dsc varchar(1023),
+    namespace varchar(256) not null,
+    type varchar(256) not null,
+    dsc varchar(1024),
     created_at date  default now not null,
     created_by varchar(1024) default user not null,
     modified_at date default now not null,
     modified_by varchar(1024) default user not null,
     status char(1) default '0' not null,
    created_by_uid integer,
-   modified_by_uid integer
+   modified_by_uid integer,
+   display_name varchar(256)
 );
 
 create table facilities (
@@ -333,10 +334,21 @@ create table service_service_packages (
    modified_by_uid integer
 );
 
+create table service_user_users (
+   user_id integer not null,
+   service_user_id integer not null,
+    created_at date  default now not null,
+    created_by varchar(1024) default user not null,
+    modified_at date default now not null,
+    modified_by varchar(1024) default user not null,
+   created_by_uid integer,
+   modified_by_uid integer
+);
+
 create table groups (
     id integer not null,
     name varchar(128) not null,
-    dsc varchar(1023),
+    dsc varchar(1024),
     vo_id integer not null,
     created_at date  default now not null,
     created_by varchar(1024) default user not null,
@@ -701,16 +713,6 @@ create table application_mail_texts (
    modified_by_uid integer
 );
 
-create table  custom_vo_attributes  (
-    attr_id  integer not null,
-    vo_id  integer,
-    selected  char(1) default '0' not null,
-    created_at  date default now not null,
-    created_by varchar(1024) default user not null,
-    modified_at  date default now not null,
-    modified_by varchar(1024) default user not null,
-    status char(1) default '0' not null
-) ;
 
 create table auditer_log (
    id integer not null,
@@ -750,7 +752,9 @@ create table entityless_attr_values (
 create table cabinet_categories (
    id integer not null,
    name varchar(128) not null,
-   rank numeric not null
+   rank numeric not null,
+   created_by_uid integer,
+   modified_by_uid integer
 );
 
 create table cabinet_publication_systems (
@@ -821,7 +825,8 @@ create table authz (
     resource_id integer,
     service_principal_id integer,
    created_by_uid integer,
-   modified_by_uid integer
+   modified_by_uid integer,
+   authorized_group_id integer
 );
 
 create table groups_resources (
@@ -833,7 +838,9 @@ create table groups_resources (
     modified_by varchar(1024) default user not null,
     status char(1) default '0' not null,
    created_by_uid integer,
-   modified_by_uid integer
+   modified_by_uid integer,
+   membership_type integer not null,
+   source_group_id integer not null
 );
 
 create table groups_members (
@@ -953,17 +960,16 @@ create table pn_regex_object (
    modified_by_uid integer
 );
 
-create table service_user_users (
-    service_user_id integer not null,
-    user_id integer not null,
-   created_by_uid integer,
-   modified_by_uid integer
-);
 
 create table groups_groups (
    group_id integer not null,
    parent_group_id integer not null,
-   group_mode integer not null
+   group_mode integer not null,
+    created_at date  default now not null,
+    created_by varchar(1024) default user not null,
+    modified_at date default now not null,
+    modified_by varchar(1024) default user not null,
+
 );
 
 create table action_types (
@@ -976,6 +982,29 @@ create table attributes_authz (
    attr_id integer not null,
    role_id integer not null,
    action_type_id integer not null
+);
+
+create table res_tags (
+   id integer not null,
+   vo_id integer not null,
+   tag_name varchar (1024) not null,
+   created_at date  default now not null,
+   created_by varchar(1024) default user not null,
+   modified_at date default now not null,
+   modified_by varchar(1024) default user not null,
+   created_by_uid integer,
+   modified_by_uid integer
+);
+
+create table tags_resources (
+   tag_id integer not null,
+   resource_id integer not null
+);
+
+create table membership_types (
+    id integer not null,
+    membership_type varchar(10) not null,
+    description varchar(1024)
 );
 
 

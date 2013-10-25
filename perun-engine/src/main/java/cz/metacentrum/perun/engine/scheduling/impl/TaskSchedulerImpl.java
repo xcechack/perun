@@ -14,7 +14,6 @@ import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
 import cz.metacentrum.perun.core.api.exceptions.PrivilegeException;
 import cz.metacentrum.perun.core.api.exceptions.ServiceNotExistsException;
 import cz.metacentrum.perun.engine.model.Pair;
-import cz.metacentrum.perun.engine.scheduling.DenialsResolver;
 import cz.metacentrum.perun.engine.scheduling.DependenciesResolver;
 import cz.metacentrum.perun.engine.scheduling.PropagationMaintainer;
 import cz.metacentrum.perun.engine.scheduling.SchedulingPool;
@@ -44,8 +43,6 @@ public class TaskSchedulerImpl implements TaskScheduler {
     private TaskStatusManager taskStatusManager;
     @Autowired
     private DependenciesResolver dependenciesResolver;
-    @Autowired
-    private DenialsResolver denialsResolver;
     @Autowired
     private Properties propertiesBean;
 
@@ -417,14 +414,6 @@ public class TaskSchedulerImpl implements TaskScheduler {
 
     public void setDependenciesResolver(DependenciesResolver dependenciesResolver) {
         this.dependenciesResolver = dependenciesResolver;
-    }
-
-    public DenialsResolver getDenialsResolver() {
-        return denialsResolver;
-    }
-
-    public void setDenialsResolver(DenialsResolver denialsResolver) {
-        this.denialsResolver = denialsResolver;
     }
 
 /*    

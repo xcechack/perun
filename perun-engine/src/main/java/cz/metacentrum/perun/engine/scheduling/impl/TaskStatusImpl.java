@@ -64,6 +64,20 @@ public class TaskStatusImpl implements TaskStatus {
 	}
 
 	@Override
+	public List<Destination> getSuccessfulDestinations() {
+		List<Destination> result = new ArrayList<Destination>();
+		if(oneOfAllSuccess) {
+			result.addAll(oneOfAllDestinations.keySet());
+		}
+		for(Map.Entry<Destination, TaskDestinationStatus> entry : allDestinations.entrySet()) {
+			if(entry.getValue().equals(TaskDestinationStatus.DONE)) {
+				result.add(entry.getKey());
+			}
+		}
+		return result;
+	}
+
+	@Override
 	public TaskDestinationStatus getDestinationStatus(Destination destination) throws InternalErrorException {
 		Map<Destination, TaskDestinationStatus> map = findMapForDestination(destination);
 		return map.get(destination);

@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
+import javax.jms.JMSException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,7 @@ import cz.metacentrum.perun.core.api.Facility;
 import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
 import cz.metacentrum.perun.core.api.exceptions.PrivilegeException;
 import cz.metacentrum.perun.core.api.exceptions.ServiceNotExistsException;
+import cz.metacentrum.perun.engine.jms.JMSQueueManager;
 import cz.metacentrum.perun.engine.model.Statistics;
 import cz.metacentrum.perun.engine.scheduling.DependenciesResolver;
 import cz.metacentrum.perun.engine.scheduling.PropagationMaintainer;
@@ -29,6 +32,7 @@ import cz.metacentrum.perun.engine.scheduling.TaskResultListener;
 import cz.metacentrum.perun.engine.scheduling.TaskScheduler;
 //import cz.metacentrum.perun.engine.scheduling.TaskStatus;
 import cz.metacentrum.perun.engine.scheduling.TaskStatus.TaskDestinationStatus;
+import cz.metacentrum.perun.engine.scheduling.TaskStatusManager;
 import cz.metacentrum.perun.engine.service.EngineManager;
 import cz.metacentrum.perun.taskslib.dao.TaskResultDao;
 import cz.metacentrum.perun.taskslib.model.ExecService;
@@ -59,6 +63,10 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     private DependenciesResolver dependenciesResolver;
     @Autowired
     private TaskScheduler taskScheduler;
+    @Autowired
+    private JMSQueueManager jmsQueueManager;
+    @Autowired
+    private TaskStatusManager taskStatusManager;
     @Autowired
     private Perun perun;
 /*
@@ -418,6 +426,34 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     private void checkFinishedTasks() {
     	// report finished tasks back to scheduler
     	// clear all tasks we are done with (ie. DONE, ERROR with no recurrence left)
+    	for(Task task : schedulingPool.getDoneTasks()) {
+    		try {
+				jmsQueueManager.reportFinishedTask(task, "");
+			} catch (JMSException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
+    	for(Task task : schedulingPool.getErrorTasks()) {
+    		if(task.getRecurrence() > 0) {
+    			continue;
+    		}
+    		
+    		List<Destination> destinations = taskStatusManager.getTaskStatus(task).getSuccessfulDestinations();
+    		
+    		StringBuilder destinations_s = new StringBuilder();
+    		destinations_s.append(destinations.remove(0).getDestination());
+    		for(Destination destination : destinations) {
+    			destinations_s.append(",");
+    			destinations_s.append(destination);
+    		}
+    		try {
+				jmsQueueManager.reportFinishedTask(task, destinations_s.toString());
+			} catch (JMSException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
     }
     
     private void rescheduleErrorTasks() {

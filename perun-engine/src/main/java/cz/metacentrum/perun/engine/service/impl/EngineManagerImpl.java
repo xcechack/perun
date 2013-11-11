@@ -55,7 +55,6 @@ public class EngineManagerImpl implements EngineManager {
     private SchedulingPool schedulingPool;
     @Autowired
     private TaskManager taskManager;
-    private RpcCaller rpcCaller;
 
     @Override
     public void registerEngine() throws EngineNotConfiguredException, DispatcherNotConfiguredException {
@@ -73,23 +72,6 @@ public class EngineManagerImpl implements EngineManager {
         //jmsQueueManager.initiateConnection();
         //jmsQueueManager.registerForReceivingMessages();
     	jmsQueueManager.start();
-    }
-
-    @Override
-    public RpcCaller getRpcCaller() {
-        if (this.rpcCaller != null) {
-            return rpcCaller;
-        }
-        try {
-            String perunPrincipal = propertiesBean.getProperty("perun.principal.name");
-            String extSourceName = propertiesBean.getProperty("perun.principal.extSourceName");
-            String extSourceType = propertiesBean.getProperty("perun.principal.extSourceType");
-            PerunPrincipal pp = new PerunPrincipal(perunPrincipal, extSourceName, extSourceType);
-            this.rpcCaller = new RpcCallerImpl(pp);
-        } catch (InternalErrorException e) {
-            log.error(e.toString());
-        }
-        return this.rpcCaller;
     }
 
     public void setEngineDao(EngineDao engineDao) {
@@ -119,6 +101,7 @@ public class EngineManagerImpl implements EngineManager {
     @Override
     public void loadSchedulingPool() {
         log.info("I am going to load ExecService:Facility pairs from SchedulingPool.txt");
+/*
         try {
             BufferedReader input = new BufferedReader(new FileReader("SchedulingPool.txt"));
             String line = null;
@@ -142,12 +125,14 @@ public class EngineManagerImpl implements EngineManager {
         } catch (ServiceNotExistsException e) {
             log.error(e.toString());
         }
+  */
         log.info("Loading ExecService:Facility pairs from SchedulingPool.txt has completed.");
     }
 
     @Override
     public void switchUnfinishedTasksToERROR() {
         log.info("I am going to switched all unfinished tasks to ERROR and finished GEN tasks which data wasn't send to NONE");
+/*
         for (Task task : taskManager.listAllTasks(Integer.parseInt(propertiesBean.getProperty("engine.unique.id")))) {
             if(task.getStatus().equals(TaskStatus.DONE)) {
                 ExecService execService = task.getExecService();
@@ -165,6 +150,7 @@ public class EngineManagerImpl implements EngineManager {
                 }
             }
         }
+ */
         log.info("I'm done with it.");
     }
 

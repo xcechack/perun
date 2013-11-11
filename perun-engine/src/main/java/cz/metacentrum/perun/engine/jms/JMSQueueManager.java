@@ -142,8 +142,9 @@ public class JMSQueueManager {
     	
     }
     
-	public void reportFinishedTask(Task task) throws JMSException {
-		TextMessage message = session.createTextMessage("task finished:" + task.getId());
+	public void reportFinishedTask(Task task, String destinations) throws JMSException {
+		TextMessage message = session.createTextMessage("task:" + propertiesBean.getProperty("engine.unique.id") 
+				+ ":" + task.getId() + ":" + task.getStatus().toString() + ":" + destinations);
 		producer.send(message);
 	}
 

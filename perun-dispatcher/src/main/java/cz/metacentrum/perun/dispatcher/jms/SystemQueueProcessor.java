@@ -142,6 +142,13 @@ public class SystemQueueProcessor {
 			// goodbye:x
 			// where x is an Integer that represents Engine's ID in the Perun
 			// DB.
+			
+			// Task status message
+			// task:x:y:dest
+			// where x is an Integer that represents Engine's ID in the Perun
+			//       y is an Integer that represents task ID
+			//       dest is an comma separated list of successfully updated destinations
+			//            (empty for DONE tasks)
 
 			String[] clientIDsplitter = systemMessagetext.split(":");
 			if (!clientIDsplitter[0].equalsIgnoreCase("register")) {

@@ -30,21 +30,21 @@ public class DependenciesResolverImpl implements DependenciesResolver {
     // (the manager just proxies, but requires perun session as paramater - which it does not use in this case)
     
     @Override
-    public List<ExecService> listDependencies(ExecService execService) throws ServiceNotExistsException, InternalErrorException, PrivilegeException {
+    public List<ExecService> listDependencies(ExecService execService) {
         List<ExecService> dependencies = execServiceDependencyDao.listExecServicesThisExecServiceDependsOn(execService.getId());
         log.debug("listDependencies #DependenciesResolver:" + dependencies);
         return dependencies;
     }
 
     @Override
-    public List<ExecService> listDependencies(int execServiceId) throws ServiceNotExistsException, InternalErrorException, PrivilegeException {
+    public List<ExecService> listDependencies(int execServiceId) {
         List<ExecService> dependencies = execServiceDependencyDao.listExecServicesThisExecServiceDependsOn(execServiceId);
         log.debug("listDependencies #DependenciesResolver:" + dependencies);
         return dependencies;
     }
 
     @Override
-    public List<ExecService> listDependantServices(ExecService execService) throws ServiceNotExistsException, InternalErrorException, PrivilegeException {
+    public List<ExecService> listDependantServices(ExecService execService) {
         return execServiceDependencyDao.listExecServicesDependingOn(execService.getId());
     }
 

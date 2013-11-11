@@ -18,8 +18,6 @@ public interface EngineManager {
 
     void startMessaging();
 
-    RpcCaller getRpcCaller();
-
     void loadSchedulingPool();
 
     void switchUnfinishedTasksToERROR();

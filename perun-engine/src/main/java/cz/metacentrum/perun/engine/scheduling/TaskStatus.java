@@ -18,6 +18,8 @@ public interface TaskStatus {
 
 	List<Destination> getWaitingDestinations();
 
+	List<Destination> getSuccessfulDestinations();
+
 	TaskDestinationStatus getDestinationStatus(Destination destination) throws InternalErrorException;
 	
 	void setDestinationStatus(Destination destination, TaskDestinationStatus status) throws InternalErrorException;

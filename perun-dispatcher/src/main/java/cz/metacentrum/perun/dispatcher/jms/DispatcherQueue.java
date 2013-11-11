@@ -66,7 +66,7 @@ public class DispatcherQueue {
 
 		try {
 			// Step 7. Create a Text Message
-			TextMessage message = session.createTextMessage("event|"+clientID+"|"+text);
+			TextMessage message = session.createTextMessage("task|"+clientID+"|"+text);
 			// Step 8. Send...
 			producer.send(message);
 			if(log.isDebugEnabled()) {

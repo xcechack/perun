@@ -3,13 +3,20 @@ package cz.metacentrum.perun.dispatcher.scheduling;
 import java.util.List;
 
 import cz.metacentrum.perun.core.api.Facility;
+import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
+import cz.metacentrum.perun.dispatcher.jms.DispatcherQueue;
 import cz.metacentrum.perun.taskslib.model.ExecService;
 import cz.metacentrum.perun.taskslib.model.Task;
+import cz.metacentrum.perun.taskslib.model.Task.TaskStatus;
 
 /**
  * 
- * @author Michal Karm Babacek JavaDoc coming soon...
+ * @author Michal Voců
  * 
+ * Contains:
+ *   - database of Tasks and their states
+ *   - mapping of Tasks to engines (dispatcherQueue)
+ *   
  */
 public interface SchedulingPool {
 
@@ -24,9 +31,10 @@ public interface SchedulingPool {
      * Add Task to the waiting list.
      * 
      * @param task
+     * @param dispatcherQueue 
      * @return
      */
-    int addToPool(Task task);
+    int addToPool(Task task, DispatcherQueue dispatcherQueue);
 
 	Task getTaskById(int id);
 
@@ -35,5 +43,9 @@ public interface SchedulingPool {
 	List<Task> getWaitingTasks();
 
 	Task getTask(ExecService execService, Facility facility);
+
+	DispatcherQueue getQueueForTask(Task task) throws InternalErrorException;
+
+	void setTaskStatus(Task task, TaskStatus status);
 
 }

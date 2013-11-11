@@ -1,14 +1,20 @@
 package cz.metacentrum.perun.dispatcher.processing.impl;
 
 import java.util.List;
+import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskExecutor;
 
+import cz.metacentrum.perun.core.api.Destination;
 import cz.metacentrum.perun.core.api.Facility;
 import cz.metacentrum.perun.core.api.Pair;
+import cz.metacentrum.perun.core.api.Perun;
+import cz.metacentrum.perun.core.api.PerunPrincipal;
+import cz.metacentrum.perun.core.api.PerunSession;
+import cz.metacentrum.perun.core.api.exceptions.FacilityNotExistsException;
 import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
 import cz.metacentrum.perun.core.api.exceptions.PrivilegeException;
 import cz.metacentrum.perun.core.api.exceptions.ServiceNotExistsException;
@@ -21,6 +27,7 @@ import cz.metacentrum.perun.dispatcher.processing.EventLogger;
 import cz.metacentrum.perun.dispatcher.processing.EventProcessor;
 import cz.metacentrum.perun.dispatcher.processing.EventQueue;
 import cz.metacentrum.perun.dispatcher.processing.SmartMatcher;
+import cz.metacentrum.perun.dispatcher.scheduling.DenialsResolver;
 import cz.metacentrum.perun.dispatcher.scheduling.SchedulingPool;
 import cz.metacentrum.perun.taskslib.model.ExecService;
 import cz.metacentrum.perun.taskslib.model.Task;
@@ -50,6 +57,8 @@ public class EventProcessorImpl implements EventProcessor {
 	@Autowired
 	private EventExecServiceResolver eventExecServiceResolver;
 	@Autowired
+	private DenialsResolver denialsResolver;
+	@Autowired
 	private SchedulingPool schedulingPool;
 	
 	public class EvProcessor implements Runnable {
@@ -60,6 +69,7 @@ public class EventProcessorImpl implements EventProcessor {
 			if (log.isDebugEnabled()) {
 				log.debug("DEBUG LEVEL ENABLED:" + log.isDebugEnabled());
 			}
+
 			while (running) {
 				try {
 					Event event = eventQueue.poll();
@@ -112,14 +122,40 @@ public class EventProcessorImpl implements EventProcessor {
 			List<Pair<List<ExecService>, Facility>> resolvedServices = eventExecServiceResolver.parseEvent(event.toString());
 			for(Pair<List<ExecService>, Facility> service : resolvedServices) {
 				//String facility = service.getRight().serializeToString();
+				Facility facility = service.getRight();
 				for(ExecService execService: service.getLeft()) {
 					//dispatcherQueue.sendMessage("[" + facility + "][" + execService.getId() + "]");
-					// TODO: create Task and add it to the pool to be scheduled
-					Task task = new Task();
-					task.setFacility(service.getRight());
-					task.setExecService(execService);
-					task.setStatus(TaskStatus.NONE);
-					schedulingPool.addToPool(task);
+
+			        log.debug("Is the execService ID:" + execService.getId() + " enabled globally?");
+			        if (execService.isEnabled()) {
+			            log.debug("   Yes, it is globally enabled.");
+			        } else {
+			            log.debug("   No, execService ID:" + execService.getId() + " is not enabled globally.");
+			            continue;
+			        }
+			        
+			        log.debug("   Is the execService ID:" + execService.getId() + " denied on facility ID:" + facility.getId() + "?");
+			        if (!denialsResolver.isExecServiceDeniedOnFacility(execService, facility)) {
+			        	log.debug("   No, it is not.");
+			        } else {
+			        	log.debug("   Yes, the execService ID:" + execService.getId() + " is denied on facility ID:" + facility.getId() + "?");
+			        	continue;
+			        }
+
+
+			        // check for presence of task for this <execService, facility> pair
+					// NOTE: this must be atomic enough to not create duplicate tasks in schedulingPool (are we running in parallel here?)
+					Task task = schedulingPool.getTask(execService, facility);
+					if(task != null) {
+						// there already is a task in schedulingPool
+					} else {
+						// no such task yet, create one
+						task = new Task();
+						task.setFacility(facility);
+						task.setExecService(execService);
+						task.setStatus(TaskStatus.NONE);
+						schedulingPool.addToPool(task, dispatcherQueue);
+					}
 				}
 			}
 		}
@@ -182,6 +218,39 @@ public class EventProcessorImpl implements EventProcessor {
 
 	public void setTaskExecutor(TaskExecutor taskExecutor) {
 		this.taskExecutor = taskExecutor;
+	}
+
+	public EvProcessor getEvProcessor() {
+		return evProcessor;
+	}
+
+	public void setEvProcessor(EvProcessor evProcessor) {
+		this.evProcessor = evProcessor;
+	}
+
+	public EventExecServiceResolver getEventExecServiceResolver() {
+		return eventExecServiceResolver;
+	}
+
+	public void setEventExecServiceResolver(
+			EventExecServiceResolver eventExecServiceResolver) {
+		this.eventExecServiceResolver = eventExecServiceResolver;
+	}
+
+	public DenialsResolver getDenialsResolver() {
+		return denialsResolver;
+	}
+
+	public void setDenialsResolver(DenialsResolver denialsResolver) {
+		this.denialsResolver = denialsResolver;
+	}
+
+	public SchedulingPool getSchedulingPool() {
+		return schedulingPool;
+	}
+
+	public void setSchedulingPool(SchedulingPool schedulingPool) {
+		this.schedulingPool = schedulingPool;
 	}
 
 }

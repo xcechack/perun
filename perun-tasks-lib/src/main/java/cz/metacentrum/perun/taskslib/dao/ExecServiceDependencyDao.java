@@ -2,6 +2,7 @@ package cz.metacentrum.perun.taskslib.dao;
 
 import java.util.List;
 
+import cz.metacentrum.perun.core.api.Pair;
 import cz.metacentrum.perun.taskslib.model.ExecService;
 import cz.metacentrum.perun.taskslib.model.ExecService.ExecServiceType;
 
@@ -12,6 +13,11 @@ import cz.metacentrum.perun.taskslib.model.ExecService.ExecServiceType;
  * @version draft
  */
 public interface ExecServiceDependencyDao {
+
+	public enum DependencyScope {
+		SERVICE, DESTINATION
+	}
+	
 	/**
 	 * Create dependency
 	 * The execService can not be executed if any of the execServices it depends
@@ -71,4 +77,7 @@ public interface ExecServiceDependencyDao {
 	 * @return
 	 */
 	public List<ExecService> listExecServicesThisExecServiceDependsOn(int dependantExecServiceId, ExecServiceType execServiceType);
+
+	public List<Pair<ExecService, DependencyScope>> listExecServicesAndScopeThisExecServiceDependsOn(
+			int dependantExecServiceId);
 }

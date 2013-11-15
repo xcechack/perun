@@ -24,6 +24,7 @@ import cz.metacentrum.perun.dispatcher.exceptions.MessageFormatException;
 import cz.metacentrum.perun.dispatcher.exceptions.PerunHornetQServerException;
 import cz.metacentrum.perun.dispatcher.hornetq.PerunHornetQServer;
 import cz.metacentrum.perun.dispatcher.processing.SmartMatcher;
+import cz.metacentrum.perun.dispatcher.scheduling.TaskScheduler;
 
 /**
  * 
@@ -48,6 +49,9 @@ public class SystemQueueProcessor {
 	private Session session = null;
 	@Autowired
 	private SystemQueueReceiver systemQueueReceiver;
+	@Autowired
+	private TaskScheduler taskScheduler;
+	
 	private boolean processingMessages = false;
 	private boolean systemQueueInitiated = false;
 
@@ -151,9 +155,6 @@ public class SystemQueueProcessor {
 			//            (empty for DONE tasks)
 
 			String[] clientIDsplitter = systemMessagetext.split(":");
-			if (!clientIDsplitter[0].equalsIgnoreCase("register")) {
-				throw new MessageFormatException("Client (Perun-Engine) sent a malformed message [" + systemMessagetext + "]");
-			}
 			int clientID = 0;
 			try {
 				clientID = Integer.parseInt(clientIDsplitter[1]);
@@ -161,19 +162,30 @@ public class SystemQueueProcessor {
 				throw new MessageFormatException("Client (Perun-Engine) sent a malformed message [" + systemMessagetext + "]", e);
 			}
 
-			// Do we have this queue already?
-			DispatcherQueue dispatcherQueue = null;
-			dispatcherQueue = dispatcherQueuePool.getDispatcherQueueByClient(clientID);
-			// Yes, so we just reload matching rules...
-			if (dispatcherQueue != null) {
+			if (clientIDsplitter[0].equalsIgnoreCase("register")) {
 
-				smartMatcher.reloadRulesFromDBForEngine(clientID);
+				// Do we have this queue already?
+				DispatcherQueue dispatcherQueue = null;
+				dispatcherQueue = dispatcherQueuePool.getDispatcherQueueByClient(clientID);
+				// 	Yes, so we just reload matching rules...
+				if (dispatcherQueue != null) {
+					
+					smartMatcher.reloadRulesFromDBForEngine(clientID);
 				
-				// No, we have to create the whole JMS queue and load matching
-				// rules...
+					// No, we have to create the whole JMS queue and load matching
+					// rules...
+				} else {
+					createDispatcherQueueForClient(clientID);
+				}
+			} else if(clientIDsplitter[0].equalsIgnoreCase("goodbye")) {
+				// engine going down, should mark all tasks as failed
+			} else if(clientIDsplitter[0].equalsIgnoreCase("task")) {
+				// task complete...
+				
 			} else {
-				createDispatcherQueueForClient(clientID);
+				throw new MessageFormatException("Client (Perun-Engine) sent a malformed message [" + systemMessagetext + "]");
 			}
+			
 
 		} else {
 			throw new PerunHornetQServerException("It looks like the HornetQ server is not running or JMSServerManager is fucked up...");

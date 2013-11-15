@@ -446,6 +446,7 @@ create table service_denials (
 create table service_dependencies (
     exec_service_id integer not null,
     dependency_id integer not null,
+    type varchar(16) not null default 'SERVICE',
     created_at date  default now not null,
     created_by varchar(1024) default user not null,
     modified_at date default now not null,

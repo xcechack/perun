@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import cz.metacentrum.perun.core.api.Destination;
 import cz.metacentrum.perun.core.api.Facility;
+import cz.metacentrum.perun.core.api.Pair;
 import cz.metacentrum.perun.core.api.Perun;
 import cz.metacentrum.perun.core.api.PerunPrincipal;
 import cz.metacentrum.perun.core.api.PerunSession;
@@ -28,6 +29,7 @@ import cz.metacentrum.perun.taskslib.model.ExecService;
 import cz.metacentrum.perun.taskslib.model.ExecService.ExecServiceType;
 import cz.metacentrum.perun.taskslib.model.Task;
 import cz.metacentrum.perun.taskslib.model.Task.TaskStatus;
+import cz.metacentrum.perun.taskslib.dao.ExecServiceDependencyDao.DependencyScope;;
 
 @org.springframework.stereotype.Service(value = "taskScheduler")
 public class TaskSchedulerImpl implements TaskScheduler {
@@ -54,6 +56,7 @@ public class TaskSchedulerImpl implements TaskScheduler {
 		}
 	}
 
+	// TODO ensure dependant tasks with scope DESTINATION go to the same engine
 	private void scheduleTask(Task task) {
 		ExecService execService = task.getExecService();
 		Facility facility = task.getFacility();
@@ -69,7 +72,7 @@ public class TaskSchedulerImpl implements TaskScheduler {
 		log.debug("Facility to be processed: " + facility.getId() + ", ExecService to be processed: " + execService.getId());
 
         List<ExecService> dependantServices = null;
-        List<ExecService> dependencies = null;
+        List<Pair<ExecService, DependencyScope>> dependencies = null;
         
         // If any of the ExecServices that depends on this one is running PROCESSING
         // we will put the ExecService,Facility pair back to the pool.
@@ -127,12 +130,14 @@ public class TaskSchedulerImpl implements TaskScheduler {
         		// :-)
         		// #######################################################################################################
         		proceed = true;
-        		dependencies = dependenciesResolver.listDependencies(execService);
+        		dependencies = dependenciesResolver.listDependenciesAndScope(execService);
         		log.debug("listDependencies #1:" + dependencies);
         		log.debug("   We are about to loop over execService [" + execService.getId() + "] dependencies.");
         		log.debug("listDependencies #2:" + dependencies);
         		log.debug("   Number of dependencies:" + dependencies);
-        		for (ExecService dependency : dependencies) {
+        		for (Pair<ExecService, DependencyScope> dependencyPair : dependencies) {
+        			ExecService dependency = dependencyPair.getLeft();
+        			DependencyScope dependencyScope = dependencyPair.getRight();
         			Task dependencyServiceTask = schedulingPool.getTask(dependency, facility);
         			if (dependencyServiceTask == null) {
         				//Dependency being NULL is equivalent to being in NONE state.
@@ -188,13 +193,17 @@ public class TaskSchedulerImpl implements TaskScheduler {
         					log.info("   Dependency ID " + dependency.getId() + " is in PLANNED so we are gonna wait.");
         					// we do not need to put it back in pool here
         					//justWait(facility, execService);
-        					proceed = false;
+        					if(dependencyScope.equals(DependencyScope.SERVICE)) {
+        						proceed = false;
+        					}
         					break;
         				case PROCESSING:
         					log.info("   Dependency ID " + dependency.getId() + " is in PROCESSING so we are gonna wait.");
         					// we do not need to put it back in pool here
         					//justWait(facility, execService);
-        					proceed = false;
+        					if(dependencyScope.equals(DependencyScope.SERVICE)) {
+            					proceed = false;
+        					}
         					break;
         				default:
         					throw new IllegalArgumentException("Unknown Task status. Expected DONE, ERROR, NONE, PLANNED or PROCESSING.");
@@ -219,7 +228,7 @@ public class TaskSchedulerImpl implements TaskScheduler {
         		log.info("   SCHEDULING execService [" + execService.getId() + "] facility [" + facility.getId() + "] as PLANNED.");
         		task.setSchedule(time);
         		schedulingPool.setTaskStatus(task, TaskStatus.PLANNED);
-        		// XXX: how do we handle generate tasks?
+        		sendToEngine(task);
         		//manipulateTasks(execService, facility, task);
         	} else {
         		throw new IllegalArgumentException("Unknown ExecService type. Expected GENERATE or SEND.");
@@ -286,6 +295,12 @@ public class TaskSchedulerImpl implements TaskScheduler {
 				+ "][" + task.getFacility().serializeToString() 
 				+ "]|[" + destinations_s.toString() + "]|[" + dependencies + "]");
 		schedulingPool.setTaskStatus(task,  TaskStatus.PROCESSING);
+	}
+
+	@Override
+	public void closeTasksForEngine(int clientID) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	@Override

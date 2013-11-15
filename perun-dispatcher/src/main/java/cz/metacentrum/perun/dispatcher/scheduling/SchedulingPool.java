@@ -48,4 +48,6 @@ public interface SchedulingPool {
 
 	void setTaskStatus(Task task, TaskStatus status);
 
+	List<Task> getTasksForEngine(int clientID);
+
 }

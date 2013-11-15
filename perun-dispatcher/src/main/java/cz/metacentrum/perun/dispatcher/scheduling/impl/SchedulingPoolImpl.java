@@ -71,8 +71,7 @@ public class SchedulingPoolImpl implements SchedulingPool {
 
 	@Override
 	public List<Task> getWaitingTasks() {
-		// TODO Auto-generated method stub
-		return null;
+		return pool.get(TaskStatus.NONE);
 	}
 
 	@Override
@@ -93,6 +92,17 @@ public class SchedulingPoolImpl implements SchedulingPool {
 	public void setTaskStatus(Task task, TaskStatus status) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public List<Task> getTasksForEngine(int clientID) {
+		List<Task> result = new ArrayList<Task>();
+		for(Pair<Task, DispatcherQueue> value : tasksById.values()) {
+			if(clientID == value.getRight().getClientID()) {
+				result.add(value.getLeft());
+			}
+		}
+		return result;
 	}
 
 }

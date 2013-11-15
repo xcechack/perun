@@ -6,11 +6,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import cz.metacentrum.perun.core.api.Pair;
 import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
 import cz.metacentrum.perun.core.api.exceptions.PrivilegeException;
 import cz.metacentrum.perun.core.api.exceptions.ServiceNotExistsException;
 import cz.metacentrum.perun.dispatcher.scheduling.DependenciesResolver;
 import cz.metacentrum.perun.taskslib.dao.ExecServiceDependencyDao;
+import cz.metacentrum.perun.taskslib.dao.ExecServiceDependencyDao.DependencyScope;
 import cz.metacentrum.perun.taskslib.model.ExecService;
 
 /**
@@ -47,5 +49,17 @@ public class DependenciesResolverImpl implements DependenciesResolver {
     public List<ExecService> listDependantServices(ExecService execService) {
         return execServiceDependencyDao.listExecServicesDependingOn(execService.getId());
     }
+
+	@Override
+	public List<Pair<ExecService, DependencyScope>> listDependenciesAndScope(
+			ExecService execService) {
+		return execServiceDependencyDao.listExecServicesAndScopeThisExecServiceDependsOn(execService.getId());
+	}
+
+	@Override
+	public List<Pair<ExecService, DependencyScope>> listDependenciesAndScope(
+			int execServiceId) {
+		return execServiceDependencyDao.listExecServicesAndScopeThisExecServiceDependsOn(execServiceId);
+	}
 
 }

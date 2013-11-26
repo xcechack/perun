@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.util.Assert;
 
 import cz.metacentrum.perun.core.api.Destination;
 import cz.metacentrum.perun.core.api.Facility;
@@ -145,9 +146,11 @@ public class EventProcessorImpl implements EventProcessor {
 
 			        // check for presence of task for this <execService, facility> pair
 					// NOTE: this must be atomic enough to not create duplicate tasks in schedulingPool (are we running in parallel here?)
-					Task task = schedulingPool.getTask(execService, facility);
+			        
+			        Task task = schedulingPool.getTask(execService, facility);
 					if(task != null) {
 						// there already is a task in schedulingPool
+						log.debug("  Task is in the pool already.");
 					} else {
 						// no such task yet, create one
 						task = new Task();
@@ -155,6 +158,7 @@ public class EventProcessorImpl implements EventProcessor {
 						task.setExecService(execService);
 						task.setStatus(TaskStatus.NONE);
 						schedulingPool.addToPool(task, dispatcherQueue);
+						log.debug("  Created new task and added to the pool.");
 					}
 				}
 			}

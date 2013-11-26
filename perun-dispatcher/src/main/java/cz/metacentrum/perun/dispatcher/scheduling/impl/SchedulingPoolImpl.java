@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import cz.metacentrum.perun.core.api.Facility;
 import cz.metacentrum.perun.core.api.Pair;
@@ -17,8 +18,11 @@ import cz.metacentrum.perun.dispatcher.scheduling.SchedulingPool;
 import cz.metacentrum.perun.taskslib.model.ExecService;
 import cz.metacentrum.perun.taskslib.model.Task;
 import cz.metacentrum.perun.taskslib.model.Task.TaskStatus;
+import cz.metacentrum.perun.taskslib.service.TaskManager;
 
 // TODO: this shares a lot of code with engine.SchedulingPoolImpl - create abstract base with implementation specific indexes
+
+// TODO: PERSISTANCE
 
 @org.springframework.stereotype.Service("schedulingPool")
 public class SchedulingPoolImpl implements SchedulingPool {
@@ -28,7 +32,10 @@ public class SchedulingPoolImpl implements SchedulingPool {
 	private Map<Integer, Pair<Task, DispatcherQueue>> tasksById = new ConcurrentHashMap<Integer, Pair<Task, DispatcherQueue>>();
 	private Map<Pair<ExecService, Facility>, Task> tasksByServiceAndFacility = new ConcurrentHashMap<Pair<ExecService, Facility>, Task>();
     private Map<TaskStatus, List<Task>> pool = new EnumMap<TaskStatus, List<Task>>(TaskStatus.class);
-	
+
+    @Autowired
+    private TaskManager taskManager;
+    
     public SchedulingPoolImpl() {
     	for(TaskStatus status : TaskStatus.class.getEnumConstants()) {
     		pool.put(status, new ArrayList<Task>());

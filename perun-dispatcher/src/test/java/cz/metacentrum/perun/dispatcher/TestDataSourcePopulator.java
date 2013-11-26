@@ -86,7 +86,9 @@ public class TestDataSourcePopulator {
 			// assign service to the resource
 			perun.getResourcesManager().assignService(testSession, resource1, service1);
 			// create execService
-			generalServiceManager.insertExecService(testSession, execService1, owner1);
+			int id = generalServiceManager.insertExecService(testSession, execService1, owner1);
+			// stash back the created id (this should be really done somewhere else)
+			execService1.setId(id);
 		} catch (Exception e) {
 			throw new InternalErrorException("error populating database", e);
 		}

@@ -839,9 +839,7 @@ create table groups_resources (
     modified_by varchar(1024) default user not null,
     status char(1) default '0' not null,
    created_by_uid integer,
-   modified_by_uid integer,
-   membership_type integer not null,
-   source_group_id integer not null
+   modified_by_uid integer
 );
 
 create table groups_members (
@@ -853,7 +851,9 @@ create table groups_members (
     modified_by varchar(1024) default user not null,
     status char(1) default '0' not null,
    created_by_uid integer,
-   modified_by_uid integer
+   modified_by_uid integer,
+   membership_type integer not null,
+   source_group_id integer not null
 );
 
 create table service_principals (

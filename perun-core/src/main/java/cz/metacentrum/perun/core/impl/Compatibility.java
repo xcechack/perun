@@ -50,7 +50,8 @@ public class Compatibility {
           } else if (dbType.equals("postgresql")) {
               return "with recursive";
           } else {
-              return "with";
+              return ""
+              		+ "with recursive";
           }
       } catch (InternalErrorException ex) {
           return "with";

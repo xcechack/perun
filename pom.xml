@@ -36,7 +36,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- by default we build devel version of perun and do tests -->
-        <perun.build.type>devel</perun.build.type>
+        <perun.build.type>michalv</perun.build.type>
         <maven.test.skip>false</maven.test.skip>
 
         <!-- perun configuration files location -->
@@ -147,7 +147,7 @@
                     <version>2.15</version>
                     <configuration>
                         <!-- disable logging for maven's tests / Test in you IDE will log normally -->
-                        <argLine>-Dlog4j.configuration=</argLine>
+                        <!--<argLine>-Dlog4j.configuration=</argLine>-->
                         <testFailureIgnore>false</testFailureIgnore>
                         <skip>false</skip>
                     </configuration>

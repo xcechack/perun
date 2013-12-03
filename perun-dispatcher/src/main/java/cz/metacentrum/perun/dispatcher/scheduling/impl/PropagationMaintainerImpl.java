@@ -677,7 +677,20 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
   */
     }
 
-/*  
+	@Override
+	public void closeTasksForEngine(int clientID) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onTaskComplete(int taskId, int clientID, String string) {
+		Task completedTask = schedulingPool.getTaskById(taskId);
+		
+	}
+
+
+    /*  
     public TaskManager getTaskManager() {
         return taskManager;
     }

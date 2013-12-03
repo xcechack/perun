@@ -24,6 +24,7 @@ import cz.metacentrum.perun.dispatcher.exceptions.MessageFormatException;
 import cz.metacentrum.perun.dispatcher.exceptions.PerunHornetQServerException;
 import cz.metacentrum.perun.dispatcher.hornetq.PerunHornetQServer;
 import cz.metacentrum.perun.dispatcher.processing.SmartMatcher;
+import cz.metacentrum.perun.dispatcher.scheduling.PropagationMaintainer;
 import cz.metacentrum.perun.dispatcher.scheduling.TaskScheduler;
 
 /**
@@ -50,7 +51,7 @@ public class SystemQueueProcessor {
 	@Autowired
 	private SystemQueueReceiver systemQueueReceiver;
 	@Autowired
-	private TaskScheduler taskScheduler;
+	private PropagationMaintainer propagationMaintainer;
 	
 	private boolean processingMessages = false;
 	private boolean systemQueueInitiated = false;
@@ -179,10 +180,10 @@ public class SystemQueueProcessor {
 				}
 			} else if(clientIDsplitter[0].equalsIgnoreCase("goodbye")) {
 				// engine going down, should mark all tasks as failed
-				taskScheduler.closeTasksForEngine(clientID);
+				propagationMaintainer.closeTasksForEngine(clientID);
 			} else if(clientIDsplitter[0].equalsIgnoreCase("task")) {
 				// task complete...
-				taskScheduler.onTaskComplete(Integer.parseInt(clientIDsplitter[2]), clientID, clientIDsplitter[3]);
+				propagationMaintainer.onTaskComplete(Integer.parseInt(clientIDsplitter[2]), clientID, clientIDsplitter[3]);
 			} else {
 				throw new MessageFormatException("Client (Perun-Engine) sent a malformed message [" + systemMessagetext + "]");
 			}

@@ -17,4 +17,8 @@ public interface PropagationMaintainer {
     void setAllGenerateDependenciesToNone(List<ExecService> dependencies, Facility facility);
 
     void setAllGenerateDependenciesToNone(List<ExecService> dependencies, int facilityId);
+
+	void closeTasksForEngine(int clientID);
+
+	void onTaskComplete(int parseInt, int clientID, String string);
 }

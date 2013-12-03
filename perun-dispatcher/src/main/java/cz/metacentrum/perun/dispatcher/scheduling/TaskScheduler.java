@@ -15,8 +15,4 @@ public interface TaskScheduler {
 
     int getPoolSize();
 
-	void closeTasksForEngine(int clientID);
-
-	void onTaskComplete(int parseInt, int clientID, String string);
-
 }

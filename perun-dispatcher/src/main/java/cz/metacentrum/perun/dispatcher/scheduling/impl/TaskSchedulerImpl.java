@@ -298,18 +298,6 @@ public class TaskSchedulerImpl implements TaskScheduler {
 	}
 
 	@Override
-	public void closeTasksForEngine(int clientID) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void onTaskComplete(int taskId, int clientID, String string) {
-		Task completedTask = schedulingPool.getTaskById(taskId);
-		
-	}
-
-	@Override
 	public int getPoolSize() {
 		// TODO Auto-generated method stub
 		return 0;

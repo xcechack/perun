@@ -170,4 +170,10 @@ public class EngineManagerImpl implements EngineManager {
         this.taskManager = taskManager;
     }
 
+	@Override
+	public Rpc getRpcCaller() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

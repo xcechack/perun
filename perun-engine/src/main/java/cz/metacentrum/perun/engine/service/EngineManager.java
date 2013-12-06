@@ -2,6 +2,7 @@ package cz.metacentrum.perun.engine.service;
 
 import cz.metacentrum.perun.engine.exceptions.DispatcherNotConfiguredException;
 import cz.metacentrum.perun.engine.exceptions.EngineNotConfiguredException;
+import cz.metacentrum.perun.rpclib.Rpc;
 import cz.metacentrum.perun.rpclib.api.RpcCaller;
 
 /**
@@ -21,4 +22,6 @@ public interface EngineManager {
     void loadSchedulingPool();
 
     void switchUnfinishedTasksToERROR();
+    
+    Rpc getRpcCaller();
 }

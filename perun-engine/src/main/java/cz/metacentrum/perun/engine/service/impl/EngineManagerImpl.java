@@ -171,7 +171,7 @@ public class EngineManagerImpl implements EngineManager {
     }
 
 	@Override
-	public Rpc getRpcCaller() {
+	public RpcCaller getRpcCaller() {
 		// TODO Auto-generated method stub
 		return null;
 	}

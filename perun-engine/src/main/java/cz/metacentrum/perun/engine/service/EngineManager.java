@@ -22,6 +22,6 @@ public interface EngineManager {
     void loadSchedulingPool();
 
     void switchUnfinishedTasksToERROR();
-    
-    Rpc getRpcCaller();
+
+    RpcCaller getRpcCaller();
 }

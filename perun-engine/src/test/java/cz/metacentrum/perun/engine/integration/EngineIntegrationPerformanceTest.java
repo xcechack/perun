@@ -50,7 +50,7 @@ public class EngineIntegrationPerformanceTest extends TestBase {
     @Autowired
     private TaskExecutorEngine taskExecutorEngine;
     @Autowired
-    private TaskExecutor taskExecutor;
+    private TaskExecutor taskExecutorMessageProcess;
     @Autowired
     private TaskManager taskManager;
     @Autowired
@@ -87,7 +87,7 @@ public class EngineIntegrationPerformanceTest extends TestBase {
 		//String message = "event|1|[Tue Aug 30 12:29:23 CEST 2011][clockworkorange][Member:[id='36712'] added to Group:[id='16326', name='falcon', description='null'].]";
 
         EventProcessorWorker eventProcessorWorker = new EventProcessorWorker(testEvent);
-        taskExecutor.execute(eventProcessorWorker);
+        taskExecutorMessageProcess.execute(eventProcessorWorker);
         boolean itWentOk = false;
         long started = System.currentTimeMillis();
         while (System.currentTimeMillis() - started < TIME_OUT) {
@@ -105,7 +105,7 @@ public class EngineIntegrationPerformanceTest extends TestBase {
         }
 
         TaskSchedulerWorker taskSchedulerWorker = new TaskSchedulerWorker();
-        taskExecutor.execute(taskSchedulerWorker);
+        taskExecutorMessageProcess.execute(taskSchedulerWorker);
         started = System.currentTimeMillis();
         itWentOk = false;
         while (System.currentTimeMillis() - started < TIME_OUT) {
@@ -130,10 +130,10 @@ public class EngineIntegrationPerformanceTest extends TestBase {
         }
 
         TaskExecutorWorker taskExecutorWorker = new TaskExecutorWorker();
-        taskExecutor.execute(taskExecutorWorker);
+        taskExecutorMessageProcess.execute(taskExecutorWorker);
 
         ///
-        taskExecutor.execute(taskSchedulerWorker);
+        taskExecutorMessageProcess.execute(taskSchedulerWorker);
         started = System.currentTimeMillis();
         itWentOk = false;
         while (System.currentTimeMillis() - started < TIME_OUT) {
@@ -155,7 +155,7 @@ public class EngineIntegrationPerformanceTest extends TestBase {
         }
         ////
 
-        taskExecutor.execute(taskSchedulerWorker);
+        taskExecutorMessageProcess.execute(taskSchedulerWorker);
         started = System.currentTimeMillis();
         itWentOk = false;
         while (System.currentTimeMillis() - started < TIME_OUT) {
@@ -176,7 +176,7 @@ public class EngineIntegrationPerformanceTest extends TestBase {
             }
         }
 
-        taskExecutor.execute(taskExecutorWorker);
+        taskExecutorMessageProcess.execute(taskExecutorWorker);
 
         /////
 
@@ -301,11 +301,11 @@ public class EngineIntegrationPerformanceTest extends TestBase {
     }
 
     public TaskExecutor getTaskExecutor() {
-        return taskExecutor;
+        return taskExecutorMessageProcess;
     }
 
     public void setTaskExecutor(TaskExecutor taskExecutor) {
-        this.taskExecutor = taskExecutor;
+        this.taskExecutorMessageProcess = taskExecutor;
     }
 
     public TaskManager getTaskManager() {

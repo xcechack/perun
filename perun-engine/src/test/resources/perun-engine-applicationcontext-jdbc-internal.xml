@@ -28,10 +28,11 @@ http://www.springframework.org/schema/jdbc http://www.springframework.org/schema
     <bean id="engineDao" class="cz.metacentrum.perun.engine.dao.jdbc.EngineDaoJdbc" init-method="initialize">
       <property name="dataSource" ref="dataSource"/> 
     </bean>
-    
+   <!-- 
     <bean id="processingRuleDao" class="cz.metacentrum.perun.engine.dao.jdbc.ProcessingRuleDaoJdbc">
       <property name="dataSource" ref="dataSource"/> 
     </bean>
+    -->
     
 
 

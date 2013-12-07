@@ -20,7 +20,7 @@
     <properties>
         <!-- module properties used by all profiles -->
         <org.springframework.version>3.1.1.RELEASE</org.springframework.version>
-       	<perun.test.groups>unit-tests</perun.test.groups>
+       	<perun.test.groups>performance</perun.test.groups>
     </properties>
 
     <!-- COMMON BUILD SETTINGS USED BY ALL PROFILES -->
@@ -295,7 +295,7 @@
             <properties>
                 <perun.build.type>production</perun.build.type>
                 <!-- <maven.test.skip>true</maven.test.skip> -->
-       	        <perun.test.groups>unit-tests</perun.test.groups>
+       	        <perun.test.groups>performance</perun.test.groups>
             </properties>
 
             <build>

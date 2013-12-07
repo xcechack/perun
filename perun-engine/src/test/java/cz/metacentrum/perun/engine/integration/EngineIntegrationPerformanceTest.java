@@ -10,6 +10,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
+import javax.jms.JMSException;
 
 import org.junit.After;
 import org.junit.Before;
@@ -24,8 +25,11 @@ import cz.metacentrum.perun.core.api.Destination;
 import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
 import cz.metacentrum.perun.engine.BaseTest;
 import cz.metacentrum.perun.engine.TestBase;
+import cz.metacentrum.perun.engine.jms.JMSQueueManager;
 import cz.metacentrum.perun.engine.processing.EventProcessor;
+import cz.metacentrum.perun.engine.scheduling.PropagationMaintainer;
 import cz.metacentrum.perun.engine.scheduling.TaskExecutorEngine;
+import cz.metacentrum.perun.engine.scheduling.TaskResultListener;
 import cz.metacentrum.perun.engine.scheduling.TaskScheduler;
 import cz.metacentrum.perun.taskslib.dao.TaskResultDao;
 import cz.metacentrum.perun.taskslib.model.Task;
@@ -55,6 +59,8 @@ public class EngineIntegrationPerformanceTest extends TestBase {
     private TaskManager taskManager;
     @Autowired
     private Properties propertiesBean;
+    @Autowired 
+    private PropagationMaintainer propagationMaintainer;
     @Autowired
     private TaskResultDao taskResultDao;
     @Autowired
@@ -70,12 +76,22 @@ public class EngineIntegrationPerformanceTest extends TestBase {
     @Autowired
     private Destination destination4;
     
-    private Set<Integer> tasks = null;
+    private long started;
+    private long ended = 0;
+    
+    private class JMSQueueManagerMock extends JMSQueueManager {
 
-
+		@Override
+		public void reportFinishedTask(Task task, String destinations)
+				throws JMSException {
+			ended = System.currentTimeMillis();
+		}
+    	
+    }
+    
     @IfProfileValue(name="perun.test.groups", values=("performance"))
     @Test
-    public void testExecutingRealMessage() throws InterruptedException {
+    public void testExecutingRealMessage() throws InterruptedException, InternalErrorException {
 		String testEvent = "task|1|[" + task1.getId() + "][" + task1.getExecServiceId() 
 				+ "][" + task1.getFacility().serializeToString()
 				+ "]|[Destinations [";
@@ -86,6 +102,13 @@ public class EngineIntegrationPerformanceTest extends TestBase {
 
 		//String message = "event|1|[Tue Aug 30 12:29:23 CEST 2011][clockworkorange][Member:[id='36712'] added to Group:[id='16326', name='falcon', description='null'].]";
 
+        started = System.currentTimeMillis();
+
+		// creates task, puts it into pool
+		eventProcessor.receiveEvent(testEvent);
+        
+        
+        /*
         EventProcessorWorker eventProcessorWorker = new EventProcessorWorker(testEvent);
         taskExecutorMessageProcess.execute(eventProcessorWorker);
         boolean itWentOk = false;
@@ -103,19 +126,18 @@ public class EngineIntegrationPerformanceTest extends TestBase {
         if (!itWentOk) {
             fail("#marDk323 Waiting for SchedilingPool has timed out.");
         }
-
+		*/
+        
+		// process pool, set task status to planned
+		taskScheduler.processPool();
+        
+        /*
         TaskSchedulerWorker taskSchedulerWorker = new TaskSchedulerWorker();
         taskExecutorMessageProcess.execute(taskSchedulerWorker);
         started = System.currentTimeMillis();
         itWentOk = false;
         while (System.currentTimeMillis() - started < TIME_OUT) {
             itWentOk = true;
-            /*
-             * No no no, PasswdSend can not be ready by this time, because we have PasswdGenerate in PLANNED.
-             * if (taskManager.getTask(getExecServicePasswdSend(), getFacility1195(), Integer.parseInt(propertiesBean.getProperty("engine.unique.id"))) == null) {
-             * itWentOk = false;
-             * }
-             */
             //if (taskManager.getTask(getExecServicePasswdGenerate(), getFacility1195(), Integer.parseInt(propertiesBean.getProperty("engine.unique.id"))) == null) {
             //    itWentOk = false;
             //}
@@ -128,7 +150,13 @@ public class EngineIntegrationPerformanceTest extends TestBase {
         if (!itWentOk) {
             fail("#marDk323 Waiting for TaskScheduler has timed out.");
         }
+        */
 
+
+		// actually run tasks
+		taskExecutorEngine.beginExecuting();
+		
+		/*
         TaskExecutorWorker taskExecutorWorker = new TaskExecutorWorker();
         taskExecutorMessageProcess.execute(taskExecutorWorker);
 
@@ -142,20 +170,17 @@ public class EngineIntegrationPerformanceTest extends TestBase {
             //if (taskManager.getTask(getExecServicePasswdSend(), getFacility1195(), Integer.parseInt(propertiesBean.getProperty("engine.unique.id"))) == null) {
             //    itWentOk = false;
             //}
-            /*
-             * if (taskManager.getTask(getExecServicePasswdGenerate(), getFacility1195(), Integer.parseInt(propertiesBean.getProperty("engine.unique.id"))) == null) {
-             * itWentOk = false;
-             * }
-             */
             log.debug("###TASK TASKS were:" + taskManager.listAllTasks(Integer.parseInt(propertiesBean.getProperty("engine.unique.id"))).toString());
             Thread.sleep(500);
             if (itWentOk) {
                 break;
             }
         }
+		*/
         ////
 
-        taskExecutorMessageProcess.execute(taskSchedulerWorker);
+		/*
+		taskExecutorMessageProcess.execute(taskSchedulerWorker);
         started = System.currentTimeMillis();
         itWentOk = false;
         while (System.currentTimeMillis() - started < TIME_OUT) {
@@ -164,26 +189,24 @@ public class EngineIntegrationPerformanceTest extends TestBase {
             //if (taskManager.getTask(getExecServicePasswdSend(), getFacility1195(), Integer.parseInt(propertiesBean.getProperty("engine.unique.id"))) == null) {
             //    itWentOk = false;
             //}
-            /*
-             * if (taskManager.getTask(getExecServicePasswdGenerate(), getFacility1195(), Integer.parseInt(propertiesBean.getProperty("engine.unique.id"))) == null) {
-             * itWentOk = false;
-             * }
-             */
             log.debug("###TASK TASKS were:" + taskManager.listAllTasks(Integer.parseInt(propertiesBean.getProperty("engine.unique.id"))).toString());
             Thread.sleep(500);
             if (itWentOk) {
                 break;
             }
         }
-
+		
         taskExecutorMessageProcess.execute(taskExecutorWorker);
+		*/
 
-        /////
-
+		propagationMaintainer.setJMSQueueManager(new JMSQueueManagerMock());
+		propagationMaintainer.checkResults();
+		
+		/////
+		/*
         int expectedTaskResults = 3;
         List<TaskResult> taskResults = null;
         itWentOk = false;
-        started = System.currentTimeMillis();
         if (taskManager == null) {
             fail("taskManager really shouldn't be null :-)");
         }
@@ -247,6 +270,13 @@ public class EngineIntegrationPerformanceTest extends TestBase {
         assertTrue("Task with getExecServicePasswdSend should have all its Task results.", itWentOk);
         // TODO: Put some While here...
         Thread.sleep(10000);
+        */
+		
+		if(ended == 0) {
+			log.debug("TASK not ended");
+		} else {
+			log.debug("TASK ended in " + Long.valueOf(ended - started).toString() + "millis");
+		}
     }
 
     private class EventProcessorWorker implements Runnable {

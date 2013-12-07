@@ -733,4 +733,12 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
         this.propertiesBean = propertiesBean;
     }
 
+	public JMSQueueManager getJmsQueueManager() {
+		return jmsQueueManager;
+	}
+
+	public void setJmsQueueManager(JMSQueueManager jmsQueueManager) {
+		this.jmsQueueManager = jmsQueueManager;
+	}
+
 }

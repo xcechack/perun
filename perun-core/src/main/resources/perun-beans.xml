@@ -273,6 +273,7 @@ http://www.springframework.org/schema/task http://www.springframework.org/schema
     <bean id="properties" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
         <property name="locations">
                        <list>
+			   <value>file:/home/michal/.perunv3/perun.properties</value>
                            <value>file:/etc/perunv3/perun.properties</value>
                        </list>            
         </property>

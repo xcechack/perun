@@ -737,7 +737,7 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
 		return jmsQueueManager;
 	}
 
-	public void setJmsQueueManager(JMSQueueManager jmsQueueManager) {
+	public void setJMSQueueManager(JMSQueueManager jmsQueueManager) {
 		this.jmsQueueManager = jmsQueueManager;
 	}
 

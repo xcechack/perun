@@ -73,7 +73,7 @@ public class EngineIntegrationPerformanceTest extends TestBase {
     private Set<Integer> tasks = null;
 
 
-    @IfProfileValue(name="test-groups", values=("performance"))
+    @IfProfileValue(name="perun.test.groups", values=("performance"))
     @Test
     public void testExecutingRealMessage() throws InterruptedException {
 		String testEvent = "task|1|[" + task1.getId() + "][" + task1.getExecServiceId() 

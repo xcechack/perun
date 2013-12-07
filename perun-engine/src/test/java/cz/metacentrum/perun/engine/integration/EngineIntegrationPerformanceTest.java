@@ -90,7 +90,7 @@ public class EngineIntegrationPerformanceTest extends TestBase {
     }
     
     @IfProfileValue(name="perun.test.groups", values=("performance"))
-    @Test
+    @Test(timeout=1000)
     public void testExecutingRealMessage() throws InterruptedException, InternalErrorException {
 		String testEvent = "task|1|[" + task1.getId() + "][" + task1.getExecServiceId() 
 				+ "][" + task1.getFacility().serializeToString()
@@ -272,11 +272,10 @@ public class EngineIntegrationPerformanceTest extends TestBase {
         Thread.sleep(10000);
         */
 		
-		if(ended == 0) {
-			log.debug("TASK not ended");
-		} else {
-			log.debug("TASK ended in " + Long.valueOf(ended - started).toString() + "millis");
+		while(ended == 0) {
+			Thread.sleep(100);
 		}
+		log.debug("TASK ended in " + Long.valueOf(ended - started).toString() + "millis");
     }
 
     private class EventProcessorWorker implements Runnable {

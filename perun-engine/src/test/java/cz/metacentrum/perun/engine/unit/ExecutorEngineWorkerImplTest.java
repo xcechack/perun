@@ -3,6 +3,7 @@ package cz.metacentrum.perun.engine.unit;
 import org.junit.Test;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.util.Assert;
 
 import cz.metacentrum.perun.core.api.Destination;
@@ -22,6 +23,7 @@ public class ExecutorEngineWorkerImplTest extends TestBase implements TaskResult
 	private Task task1;
 	private int count = 0;
 	
+    @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
 	@Test
 	public void runTest() {
 		ExecutorEngineWorker worker = (ExecutorEngineWorker) beanFactory.getBean("executorEngineWorker");

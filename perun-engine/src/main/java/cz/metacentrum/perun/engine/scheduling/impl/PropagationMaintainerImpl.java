@@ -97,6 +97,8 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
 
 //    	checkProcessingTasks();
     	
+		log.info("Going to check propagation status for " + schedulingPool.getSize() + " tasks");
+		
 		checkFinishedTasks();
 		
 		rescheduleErrorTasks();
@@ -427,8 +429,10 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     	// report finished tasks back to scheduler
     	// clear all tasks we are done with (ie. DONE, ERROR with no recurrence left)
     	for(Task task : schedulingPool.getDoneTasks()) {
+    		log.debug("TASK " + task.toString() + " finished");
     		try {
-				jmsQueueManager.reportFinishedTask(task, "");
+    			log.debug("TASK reported as finished at " + System.currentTimeMillis());
+    			jmsQueueManager.reportFinishedTask(task, "");
 			} catch (JMSException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -436,6 +440,7 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     	}
     	for(Task task : schedulingPool.getErrorTasks()) {
     		if(task.getRecurrence() > 0) {
+        		log.debug("TASK " + task.toString() + " finished in error, will reschedule");
     			continue;
     		}
     		
@@ -447,6 +452,7 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     			destinations_s.append(",");
     			destinations_s.append(destination);
     		}
+    		log.debug("TASK " + task.toString() + " finished in error, remaining destinations: " + destinations_s);
     		try {
 				jmsQueueManager.reportFinishedTask(task, destinations_s.toString());
 			} catch (JMSException e) {
@@ -457,9 +463,10 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     }
     
     private void rescheduleErrorTasks() {
-        log.info("I am gonna list tasks in ERROR and reschedule if necessary...");
+        //log.info("I am gonna list tasks in ERROR and reschedule if necessary...");
 
         for(Task task : schedulingPool.getErrorTasks()) {
+    		log.debug("TASK " + task.toString() + " finished in error");
             if (task.getEndTime() == null) {
                 log.error("RECOVERY FROM INCONSISTENT STATE: ERROR task does not have end_time! Setting end_time to task.getDelay + 1.");
                 // getDelay is in minutes, therefore we multiply it with 60*1000
@@ -737,7 +744,7 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
 		return jmsQueueManager;
 	}
 
-	public void setJMSQueueManager(JMSQueueManager jmsQueueManager) {
+	public void setJmsQueueManager(JMSQueueManager jmsQueueManager) {
 		this.jmsQueueManager = jmsQueueManager;
 	}
 

@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.util.Assert;
 
 import cz.metacentrum.perun.core.api.Destination;
@@ -30,6 +31,7 @@ public class TaskStatusImplTest extends TestBase {
 	@Autowired
 	Task task1;
 	
+    @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
 	@Test
 	public void getWaitingDestinationsTest() throws InternalErrorException {
 		TaskStatus taskStatus = new TaskStatusImpl(task1);
@@ -46,12 +48,14 @@ public class TaskStatusImplTest extends TestBase {
 		Assert.isTrue(destinations.size() == 0, "size == 0");
 	}
 	
+    @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
 	@Test
 	public void getDestinationStatusTest() throws InternalErrorException {
 		TaskStatus taskStatus = new TaskStatusImpl(task1);
 		Assert.isTrue(taskStatus.getDestinationStatus(destination1).equals(TaskDestinationStatus.WAITING));
 	}
 	
+    @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
 	@Test
 	public void setDestinationStatusTest() throws InternalErrorException {
 		TaskStatus taskStatus = new TaskStatusImpl(task1);
@@ -59,6 +63,7 @@ public class TaskStatusImplTest extends TestBase {
 		Assert.isTrue(taskStatus.getDestinationStatus(destination1).equals(TaskDestinationStatus.DONE));
 	}
 	
+    @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
 	@Test
 	public void isTaskFinishedTest() throws InternalErrorException {
 		TaskStatus taskStatus = new TaskStatusImpl(task1);
@@ -73,6 +78,7 @@ public class TaskStatusImplTest extends TestBase {
 		Assert.isTrue(taskStatus.isTaskFinished());
 	}
 
+    @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
 	@Test
 	public void getTaskStatusTest() throws InternalErrorException {
 		TaskStatus taskStatus = new TaskStatusImpl(task1);

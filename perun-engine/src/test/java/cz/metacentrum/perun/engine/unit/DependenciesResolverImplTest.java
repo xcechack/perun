@@ -6,6 +6,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.util.Assert;
 
 import cz.metacentrum.perun.engine.TestBase;
@@ -32,6 +33,7 @@ public class DependenciesResolverImplTest extends TestBase {
 		dependenciesResolver.addDependency(task2, task1.getId());
 	}
 	
+    @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
 	@Test
 	public void getDependencyTest() {
 		List<Task> dependencies = dependenciesResolver.getDependencies(task2);
@@ -41,6 +43,7 @@ public class DependenciesResolverImplTest extends TestBase {
 		Assert.isTrue(dependencies.size() == 0, "no dependencies");
 	}
 	
+    @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
 	@Test
 	public void getDependantsTest() {
 		List<Task> dependants = dependenciesResolver.getDependants(task1);

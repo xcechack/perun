@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.util.Assert;
 
 import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
@@ -22,6 +23,7 @@ public class TaskSchedulerImplTest extends TestBase {
 	@Autowired
 	private TaskScheduler taskScheduler;
 	
+    @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
 	@Test
 	public void processPoolTest() throws InternalErrorException {
 		schedulingPool.addToPool(task1);

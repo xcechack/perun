@@ -134,12 +134,15 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
                 taskResult.setStatus(returnCode == 0 ? TaskResultStatus.DONE : TaskResultStatus.ERROR);
                 taskResult.setTimestamp(new Date(System.currentTimeMillis()));
 
+                task.setEndTime(new Date(System.currentTimeMillis()));
+                
                 //taskResultDao.insertNewTaskResult(taskResult, getEngineId());
 
                 if(taskResult.getStatus().equals(TaskStatus.ERROR)) {
                   log.info("SEND task failed. Ret code " + returnCode + ". STDOUT: {}  STDERR: {}. Task: " + task, stdout, stderr);
                   resultListener.onTaskDestinationError(task, destination, taskResult);
                 } else {
+                    log.info("SEND task completed. Ret code " + returnCode + ". STDOUT: {}  STDERR: {}. Task: " + task, stdout, stderr);
                 	resultListener.onTaskDestinationDone(task, destination, taskResult);
                 }
 

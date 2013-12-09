@@ -84,7 +84,7 @@ public class EngineIntegrationPerformanceTest extends TestBase {
     
     private long started;
     private int ended = 0;
-    private final int NUM_TASKS = 100;
+    private final int NUM_TASKS = 500;
     
     private class JMSQueueManagerMock extends JMSQueueManager {
 

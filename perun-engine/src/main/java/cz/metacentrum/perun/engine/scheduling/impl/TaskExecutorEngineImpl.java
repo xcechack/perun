@@ -64,7 +64,9 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
     	// run all tasks in scheduled state
     	Date now = new Date(System.currentTimeMillis());
     	for(Task task : schedulingPool.getPlannedTasks()) {
-    		if(task.getSchedule().after(now)) {
+    		log.debug("TASK " + task.toString() + " is to be run at " + task.getSchedule() + ", now is " + now);
+    		if(true || task.getSchedule().after(now)) {
+        		log.debug("TASK " + task.toString() + " is going to run");
     			runTask(task);
     		}
     	}
@@ -147,6 +149,7 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
 			try {
 				for(Task dependency : dependencies) {
 					if(taskStatusManager.getTaskStatus(dependency).getDestinationStatus(destination) != TaskDestinationStatus.DONE) {
+						log.debug("TASK " + task.toString() + " has unmet dependencies");
 						proceed = false;
 					}	
 				}
@@ -171,7 +174,8 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
      * 
      */
     private void startWorker(Task task, Destination destination) {
-        ExecutorEngineWorker executorEngineWorker = createExecutorEngineWorker();
+    	log.debug("Starting worker for task " + task.getId() + " and destination " + destination.toString());
+    	ExecutorEngineWorker executorEngineWorker = createExecutorEngineWorker();
         executorEngineWorker.setTask(task);
         executorEngineWorker.setFacility(task.getFacility());
         executorEngineWorker.setExecService(task.getExecService());

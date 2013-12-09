@@ -2,6 +2,7 @@ package cz.metacentrum.perun.engine.unit;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.util.Assert;
 
 import cz.metacentrum.perun.engine.TestBase;
@@ -16,6 +17,7 @@ public class TaskStatusManagerImplTest extends TestBase {
 	@Autowired
 	Task task1;
 	
+    @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
 	@Test
 	public void getTaskStatusTest() {
 		TaskStatus taskStatus1 = taskStatusManager.getTaskStatus(task1);
@@ -23,6 +25,7 @@ public class TaskStatusManagerImplTest extends TestBase {
 		Assert.isTrue(taskStatus1 == taskStatus2);
 	}
 	
+    @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
 	@Test
 	public void clearTaskStatusTest() {
 		TaskStatus taskStatus1 = taskStatusManager.getTaskStatus(task1);

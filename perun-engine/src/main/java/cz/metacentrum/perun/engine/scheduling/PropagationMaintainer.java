@@ -22,5 +22,5 @@ public interface PropagationMaintainer {
 
     void setAllGenerateDependenciesToNone(List<ExecService> dependencies, int facilityId);
 
-	void setJMSQueueManager(JMSQueueManager jmsQueueManager);
+	void setJmsQueueManager(JMSQueueManager jmsQueueManager);
 }

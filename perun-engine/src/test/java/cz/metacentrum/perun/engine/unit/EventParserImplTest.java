@@ -2,6 +2,7 @@ package cz.metacentrum.perun.engine.unit;
 
 import java.util.Properties;
 
+import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.util.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -27,6 +28,7 @@ public class EventParserImplTest extends TestBase {
 	@Autowired
 	private Properties propertiesBean;
 	
+    @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
 	@Test
 	public void testParseEvent() throws ServiceNotExistsException, InvalidEventMessageException, InternalErrorException, PrivilegeException {
 		propertiesBean.setProperty("engine.unique.id", "1");

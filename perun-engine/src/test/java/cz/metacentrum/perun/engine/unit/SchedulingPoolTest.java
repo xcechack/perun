@@ -42,6 +42,7 @@ public class SchedulingPoolTest extends TestBase {
     	schedulingPool.addToPool(task1);
     }
     
+    @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
     @Test 
     public void addToPoolTest() {
     	Assert.isTrue(schedulingPool.getSize() == 1, "original size is 1");
@@ -53,6 +54,7 @@ public class SchedulingPoolTest extends TestBase {
     	Assert.isTrue(schedulingPool.getSize() == 2, "new size is 2");
     }
     
+    @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
     @Test
     public void getFromPoolTest() {
     	List<Task> tasks = schedulingPool.getDoneTasks();
@@ -63,6 +65,7 @@ public class SchedulingPoolTest extends TestBase {
     	Assert.isTrue(task1 == tasks.get(0), "task equals");
     }
     
+    @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
     @Test
     public void setTaskStatusTest() {
     	schedulingPool.setTaskStatus(task1, TaskStatus.PROCESSING);
@@ -73,6 +76,7 @@ public class SchedulingPoolTest extends TestBase {
     	Assert.isTrue(task1 == tasks.get(0));
     }
     
+    @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
     @Test
     public void getTaskByIdTest() {
     	Task task = schedulingPool.getTaskById(task1.getId());

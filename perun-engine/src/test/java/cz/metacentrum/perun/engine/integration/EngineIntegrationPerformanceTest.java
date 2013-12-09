@@ -31,6 +31,7 @@ import cz.metacentrum.perun.engine.scheduling.PropagationMaintainer;
 import cz.metacentrum.perun.engine.scheduling.TaskExecutorEngine;
 import cz.metacentrum.perun.engine.scheduling.TaskResultListener;
 import cz.metacentrum.perun.engine.scheduling.TaskScheduler;
+import cz.metacentrum.perun.engine.scheduling.TaskStatusManager;
 import cz.metacentrum.perun.taskslib.dao.TaskResultDao;
 import cz.metacentrum.perun.taskslib.model.Task;
 import cz.metacentrum.perun.taskslib.model.Task.TaskStatus;
@@ -57,6 +58,8 @@ public class EngineIntegrationPerformanceTest extends TestBase {
     private TaskExecutor taskExecutorMessageProcess;
     @Autowired
     private TaskManager taskManager;
+    @Autowired
+    private TaskStatusManager taskStatusManager;
     @Autowired
     private Properties propertiesBean;
     @Autowired 
@@ -90,9 +93,12 @@ public class EngineIntegrationPerformanceTest extends TestBase {
     }
     
     @IfProfileValue(name="perun.test.groups", values=("performance"))
-    @Test(timeout=1000)
+    @Test(timeout=10000)
     public void testExecutingRealMessage() throws InterruptedException, InternalErrorException {
-		String testEvent = "task|1|[" + task1.getId() + "][" + task1.getExecServiceId() 
+    	long sum = 0;
+    	int num;
+    	for(num = 0; num < 1; num++) {
+    	String testEvent = "task|1|[" + task1.getId() + "][" + task1.getExecServiceId() 
 				+ "][" + task1.getFacility().serializeToString()
 				+ "]|[Destinations [";
 		for(Destination destination: task1.getDestinations()) {
@@ -199,8 +205,7 @@ public class EngineIntegrationPerformanceTest extends TestBase {
         taskExecutorMessageProcess.execute(taskExecutorWorker);
 		*/
 
-		propagationMaintainer.setJMSQueueManager(new JMSQueueManagerMock());
-		propagationMaintainer.checkResults();
+		propagationMaintainer.setJmsQueueManager(new JMSQueueManagerMock());
 		
 		/////
 		/*
@@ -273,9 +278,15 @@ public class EngineIntegrationPerformanceTest extends TestBase {
         */
 		
 		while(ended == 0) {
+			log.debug("TASK " + task1.toString() + " is in state " + taskStatusManager.getTaskStatus(task1).getTaskStatus().toString());
+			propagationMaintainer.checkResults();
 			Thread.sleep(100);
 		}
 		log.debug("TASK ended in " + Long.valueOf(ended - started).toString() + "millis");
+		sum += ended - started;
+    	}
+    	long avg = sum/num;
+    	log.debug("Average TASK propagation time: " + avg);
     }
 
     private class EventProcessorWorker implements Runnable {

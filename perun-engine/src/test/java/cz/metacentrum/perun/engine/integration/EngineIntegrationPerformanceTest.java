@@ -28,6 +28,7 @@ import cz.metacentrum.perun.engine.TestBase;
 import cz.metacentrum.perun.engine.jms.JMSQueueManager;
 import cz.metacentrum.perun.engine.processing.EventProcessor;
 import cz.metacentrum.perun.engine.scheduling.PropagationMaintainer;
+import cz.metacentrum.perun.engine.scheduling.SchedulingPool;
 import cz.metacentrum.perun.engine.scheduling.TaskExecutorEngine;
 import cz.metacentrum.perun.engine.scheduling.TaskResultListener;
 import cz.metacentrum.perun.engine.scheduling.TaskScheduler;
@@ -62,6 +63,8 @@ public class EngineIntegrationPerformanceTest extends TestBase {
     private TaskStatusManager taskStatusManager;
     @Autowired
     private Properties propertiesBean;
+    @Autowired
+    private SchedulingPool schedulingPool;
     @Autowired 
     private PropagationMaintainer propagationMaintainer;
     @Autowired
@@ -80,14 +83,15 @@ public class EngineIntegrationPerformanceTest extends TestBase {
     private Destination destination4;
     
     private long started;
-    private long ended = 0;
+    private int ended = 0;
+    private final int NUM_TASKS = 100;
     
     private class JMSQueueManagerMock extends JMSQueueManager {
 
 		@Override
 		public void reportFinishedTask(Task task, String destinations)
 				throws JMSException {
-			ended = System.currentTimeMillis();
+			ended += 1;
 		}
     	
     }
@@ -97,8 +101,8 @@ public class EngineIntegrationPerformanceTest extends TestBase {
     public void testExecutingRealMessage() throws InterruptedException, InternalErrorException {
     	long sum = 0;
     	int num;
-    	for(num = 0; num < 1; num++) {
-    	String testEvent = "task|1|[" + task1.getId() + "][" + task1.getExecServiceId() 
+    	for(num = 0; num < NUM_TASKS; num++) {
+    	String testEvent = "task|1|[" + num + "][" + task1.getExecServiceId() 
 				+ "][" + task1.getFacility().serializeToString()
 				+ "]|[Destinations [";
 		for(Destination destination: task1.getDestinations()) {
@@ -112,7 +116,7 @@ public class EngineIntegrationPerformanceTest extends TestBase {
 
 		// creates task, puts it into pool
 		eventProcessor.receiveEvent(testEvent);
-        
+    	}
         
         /*
         EventProcessorWorker eventProcessorWorker = new EventProcessorWorker(testEvent);
@@ -277,16 +281,14 @@ public class EngineIntegrationPerformanceTest extends TestBase {
         Thread.sleep(10000);
         */
 		
-		while(ended == 0) {
-			log.debug("TASK " + task1.toString() + " is in state " + taskStatusManager.getTaskStatus(task1).getTaskStatus().toString());
+		while(ended < NUM_TASKS) {
 			propagationMaintainer.checkResults();
 			Thread.sleep(100);
 		}
-		log.debug("TASK ended in " + Long.valueOf(ended - started).toString() + "millis");
-		sum += ended - started;
-    	}
-    	long avg = sum/num;
-    	log.debug("Average TASK propagation time: " + avg);
+		for(Task task : schedulingPool.getDoneTasks()) {
+			sum += task.getEndTime().getTime() - task.getSchedule().getTime();
+		}
+		log.debug("Average TASK propagation time: " + sum/NUM_TASKS);
     }
 
     private class EventProcessorWorker implements Runnable {

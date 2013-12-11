@@ -36,7 +36,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- by default we build devel version of perun and do tests -->
-        <perun.build.type>michalv</perun.build.type>
+        <perun.build.type>engine-new</perun.build.type>
         <maven.test.skip>false</maven.test.skip>
 
         <!-- perun configuration files location -->

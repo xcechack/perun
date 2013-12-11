@@ -51,7 +51,8 @@ public class Utils {
 
 	private final static Logger log = LoggerFactory.getLogger(Utils.class);	
 	private final static Pattern patternForCommonNameParsing = Pattern.compile("(([\\w]*. )*)([\\p{L}-']+) ([\\p{L}-']+)[, ]*(.*)");
-	public final static String configurationsLocations = "/home/michal/.perunv3/";
+	// TODO: this should probably be taken from the build properties
+	public final static String configurationsLocations = "/etc/perunv3/";
 	private static Properties properties;
 	
 	/**

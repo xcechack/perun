@@ -81,5 +81,7 @@ public interface SchedulingPool {
 	Task getTaskById(int id);
 
 	void removeTask(Task task);
+	
+	void reloadTasks();
 
 }

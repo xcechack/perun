@@ -398,7 +398,6 @@ create table tasks (
     recurrence integer not null,
     delay integer not null,
     status varchar(16) not null,
-    type varchar(16) not null,
     start_time date,
     end_time date,
     engine_id integer not null,

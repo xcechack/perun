@@ -46,7 +46,7 @@ import java.util.ArrayList;
  * @version $Id$
  */
 
-public class ApplicationFormGui implements EntryPoint{
+public class ApplicationFormGui implements EntryPoint {
 
 	/**
 	 * Perun web session
@@ -58,6 +58,8 @@ public class ApplicationFormGui implements EntryPoint{
 	 */
 	private static VirtualOrganization vo;
 	private static Group group;
+    private String voName = null;
+    private String groupName = null;
     private HTML voContact = new HTML("");
 	
 	/**
@@ -165,13 +167,12 @@ public class ApplicationFormGui implements EntryPoint{
 	/**
 	 * Loads the VO by the parameter
 	 */
-	public void loadVo(final JsonCallbackEvents events)
-	{
-		// get vo by short name
-		String shortName = Location.getParameter("vo");
-		final String groupName = Location.getParameter("group");
-		
-		Initialize req = new Initialize(shortName, groupName, new JsonCallbackEvents(){
+	public void loadVo(final JsonCallbackEvents events) {
+
+		voName = Location.getParameter("vo");
+        groupName = Location.getParameter("group");
+
+		Initialize req = new Initialize(voName, groupName, new JsonCallbackEvents(){
 			public void onFinished(JavaScriptObject jso){
 				
 				JsArray<Attribute> list = JsonUtils.jsoAsArray(jso);
@@ -385,8 +386,6 @@ public class ApplicationFormGui implements EntryPoint{
 	
 	private void isUserMemberOfVo() {
 		
-		final String groupName = Location.getParameter("group");
-		
 		// CHECK USER IF PRESENT
 		if(session.getUser() != null) {
 			
@@ -442,11 +441,14 @@ public class ApplicationFormGui implements EntryPoint{
 					// not member of VO - load initial
 					if (error.getName().equalsIgnoreCase("MemberNotExistsException")) {
 						if (groupName != null && !groupName.isEmpty()) {
+
+                            // load application to group for NOT vo members
+                            prepareGui(PerunEntity.GROUP, "INITIAL");
+
                             // Do NOT display application to Group if not member of VO
-                            //prepareGui(PerunEntity.GROUP, "INITIAL");
-                            RootLayoutPanel panel = RootLayoutPanel.get();
-                            panel.clear();
-                            panel.add(getErrorWidget(error));
+                            //RootLayoutPanel panel = RootLayoutPanel.get();
+                            //panel.clear();
+                            //panel.add(getCustomErrorWidget(error, ApplicationMessages.INSTANCE.mustBeVoMemberFirst()));
 
 						} else {
 							prepareGui(PerunEntity.VIRTUAL_ORGANIZATION, "INITIAL");
@@ -468,7 +470,7 @@ public class ApplicationFormGui implements EntryPoint{
 			
 		}
 		
-		// UNKNOW USER - LOAD INITIAL
+		// UNKNOWN USER - LOAD INITIAL
 		if (groupName != null && !groupName.isEmpty()) {
 			prepareGui(PerunEntity.GROUP, "INITIAL");
 		} else {
@@ -514,7 +516,6 @@ public class ApplicationFormGui implements EntryPoint{
 			ValidateEmail request = new ValidateEmail(verifyI, verifyM, new JsonCallbackEvents(){
 				@Override
 				public void onLoadingStart() {
-					
 					verifContent.clear();
 					verifContent.add(new AjaxLoaderImage());
 				}
@@ -569,8 +570,8 @@ public class ApplicationFormGui implements EntryPoint{
 			return;
 			
 		}
-		
-		// application form page
+
+        // application form page
 		ApplicationFormPage formPage = new ApplicationFormPage(vo, group, applicationType);
 		// even user "not yet in perun" can have some applications sent (therefore display by session info)
 		UsersApplicationsPage appsPage = new UsersApplicationsPage();
@@ -613,7 +614,7 @@ public class ApplicationFormGui implements EntryPoint{
 		
 		String text = "<h2>Request timeout exceeded.</h2>";
 		if (error != null) {
-			text = error.getErrorInfo();										
+			text = error.getErrorInfo();
 		}
 		FlexTable ft = new FlexTable();
 		ft.setSize("100%", "300px");
@@ -622,9 +623,20 @@ public class ApplicationFormGui implements EntryPoint{
 		ft.getFlexCellFormatter().setVerticalAlignment(0, 0, HasVerticalAlignment.ALIGN_MIDDLE);
 		
 		return ft;
-		
-		
+
 	}
+
+    private FlexTable getCustomErrorWidget(PerunError error, String customText) {
+
+        FlexTable ft = new FlexTable();
+        ft.setSize("100%", "300px");
+        ft.setHTML(0, 0, new Image(LargeIcons.INSTANCE.errorIcon())+"<h2>Error: </h2>" + customText);
+        ft.getFlexCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
+        ft.getFlexCellFormatter().setVerticalAlignment(0, 0, HasVerticalAlignment.ALIGN_MIDDLE);
+
+        return ft;
+
+    }
 
     private FlexTable getFooter() {
 

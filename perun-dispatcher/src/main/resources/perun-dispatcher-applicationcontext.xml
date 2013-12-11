@@ -40,13 +40,25 @@ http://www.springframework.org/schema/task http://www.springframework.org/schema
     <context:component-scan base-package="cz.metacentrum.perun.dispatcher"/>
     <context:component-scan base-package="cz.metacentrum.perun.controller"/>
     
+	<bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+  		<property name="corePoolSize" value="10" />
+  		<property name="maxPoolSize" value="50" />
+  		<property name="queueCapacity" value="100" />
+	</bean>
+    
     <!-- Properties Bean -->
-	<bean id="propertiesBean" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
-       	<property name="locations">
-      		<list>
-	           	<value>classpath:dispatcher-config.properties</value>
-           	</list>	
-       	</property>
+    <bean id="propertiesBean" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+        <property name="locations">
+        	<list>
+	           	<value>${perun.jdbc}</value>
+				<value>file:${perun.conf.custom}/jdbc.properties</value>
+	            <value>file:${perun.conf}/perun-dispatcher.properties</value>
+                <value>file:${perun.conf.custom}/perun-dispatcher.properties</value>
+            </list>
+        </property>
+        <property name="ignoreResourceNotFound">
+            <value>true</value>
+        </property>
        	<property name="properties">
        		<props>
        		    	<prop key="perun.principal.name">perunTests</prop>
@@ -54,13 +66,7 @@ http://www.springframework.org/schema/task http://www.springframework.org/schema
        		    	<prop key="perun.principal.extSourceType">cz.metacentrum.perun.core.impl.ExtSourceInternal</prop>
        		</props>	    
        	</property> 
-   	</bean>
-
-	<bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
-  		<property name="corePoolSize" value="10" />
-  		<property name="maxPoolSize" value="50" />
-  		<property name="queueCapacity" value="100" />
-	</bean>
+    </bean>
     
     <!-- BEGIN Quartz tasks -->	
 	<bean id="maintenanceJob" class="org.springframework.scheduling.quartz.JobDetailBean">

@@ -8,15 +8,13 @@ http://www.springframework.org/schema/beans http://www.springframework.org/schem
 http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
 http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
 ">
-	<!-- 
-    <context:property-placeholder location="${perun.jdbc}"/>
-	-->
-	
 	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
     	<property name="ignoreResourceNotFound" value="true"/>
+		<property name="ignoreUnresolvable" value="true"/>
     	<property name="locations">
         	<list>
             	<value>${perun.jdbc}</value>
+				<value>file:${perun.conf.custom}/jdbc.properties</value>
         	</list>
     	</property>
     	<property name="properties">

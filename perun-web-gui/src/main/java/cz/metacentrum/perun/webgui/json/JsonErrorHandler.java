@@ -7,6 +7,7 @@ import com.google.gwt.json.client.JSONString;
 import com.google.gwt.user.client.ui.*;
 import cz.metacentrum.perun.webgui.client.PerunWebConstants;
 import cz.metacentrum.perun.webgui.client.PerunWebSession;
+import cz.metacentrum.perun.webgui.client.UiElements;
 import cz.metacentrum.perun.webgui.client.localization.WidgetTranslation;
 import cz.metacentrum.perun.webgui.client.resources.LargeIcons;
 import cz.metacentrum.perun.webgui.client.resources.SmallIcons;
@@ -22,7 +23,7 @@ import java.util.Set;
  * Class for handling Error objects returned from RPC server
  *
  * @author Pavel Zlamal <256627@mail.muni.cz>
- * @version $Id$
+ * @version $Id: e56daef542e2a1710c3d6ccb41bbb421ffcdaa80 $
  */
 public class JsonErrorHandler {
 
@@ -107,9 +108,6 @@ public class JsonErrorHandler {
 
             public void onClick(ClickEvent event) {
 
-                // request itself
-                SendMessageToRt msg = new SendMessageToRt();
-
                 String text = error.getErrorId() + " - " + error.getName() + "\n";
                 text += error.getErrorInfo() + "\n\n";
                 text += "Request: " + request + "\n";
@@ -118,6 +116,37 @@ public class JsonErrorHandler {
                 text += "Authz: " + PerunWebSession.getInstance().getRolesString() + "\n\n";
                 text += "GUI version: " + PerunWebConstants.INSTANCE.guiVersion()+ "\n\n";
                 text += "Message: " + messageTextBox.getText();
+
+                final String finalText = text;
+
+                // request itself
+                SendMessageToRt msg = new SendMessageToRt(new JsonCallbackEvents(){
+                    @Override
+                    public void onError(PerunError error){
+
+                        FlexTable layout = new FlexTable();
+
+                        TextArea scrollPanel = new TextArea();
+                        scrollPanel.setText(finalText);
+
+                        layout.setWidget(0, 0, new HTML("<p>"+new Image(LargeIcons.INSTANCE.errorIcon())));
+                        layout.setHTML(0, 1, "<p>Reporting errors is not working at the moment. We are sorry for inconvenience. <p>Please send following text to <strong>perun@cesnet.cz</strong>.");
+
+                        layout.getFlexCellFormatter().setColSpan(1, 0, 2);
+                        layout.setWidget(1, 0, scrollPanel);
+
+                        scrollPanel.setSize("350px", "150px");
+
+                        layout.getFlexCellFormatter().setAlignment(0, 0, HasHorizontalAlignment.ALIGN_LEFT, HasVerticalAlignment.ALIGN_TOP);
+                        layout.getFlexCellFormatter().setAlignment(0, 1, HasHorizontalAlignment.ALIGN_LEFT, HasVerticalAlignment.ALIGN_TOP);
+                        layout.getFlexCellFormatter().setStyleName(0, 0, "alert-box-image");
+
+                        Confirm c = new Confirm("Error report is not working", layout, true);
+                        c.setNonScrollable(true);
+                        c.show();
+
+                    };
+                });
 
                 msg.sendMessage(SendMessageToRt.DEFAULT_QUEUE, "ERROR "+error.getErrorId()+": "+request, text);
 
@@ -212,7 +241,7 @@ public class JsonErrorHandler {
                 }
             }
             if (a != null) {
-                String attrName = a.getTranslatedName();
+                String attrName = a.getDisplayName();
                 String attrValue = a.getValue();
                 text += "<strong>Attribute:&nbsp;</strong>"+attrName+"<br /><strong>Value:&nbsp;</strong>"+attrValue;
             } else {
@@ -229,7 +258,7 @@ public class JsonErrorHandler {
             Attribute a2 = error.getReferenceAttribute();
 
             if (a != null) {
-                String attrName = a.getTranslatedName();
+                String attrName = a.getDisplayName();
                 String attrValue = a.getValue();
                 String entity = a.getEntity();
                 text += "<p><strong>Attribute&nbsp;1:</strong>&nbsp;"+attrName + " ("+entity+")";
@@ -239,7 +268,7 @@ public class JsonErrorHandler {
             }
 
             if (a2 != null) {
-                String attrName = a2.getTranslatedName();
+                String attrName = a2.getDisplayName();
                 String attrValue = a2.getValue();
                 String entity = a2.getEntity();
                 text += "<p><strong>Attribute&nbsp;2:</strong>&nbsp;"+attrName + " ("+entity+")";
@@ -315,7 +344,7 @@ public class JsonErrorHandler {
         } else if ("AttributeAlreadyAssignedException".equalsIgnoreCase(errorName)) {
 
             if (error.getAttribute() != null) {
-                return "Attribute <i>"+error.getAttribute().getTranslatedName()+"</i> is already set as required by service.";
+                return "Attribute <i>"+error.getAttribute().getDisplayName()+"</i> is already set as required by service.";
             } else {
                 return "Attribute is already set as required by service.";
             }
@@ -327,7 +356,7 @@ public class JsonErrorHandler {
         } else if ("AttributeNotAssignedException".equalsIgnoreCase(errorName)) {
 
             if (error.getAttribute() != null) {
-                return "Attribute <i>"+error.getAttribute().getTranslatedName()+"</i> is already NOT required by service.";
+                return "Attribute <i>"+error.getAttribute().getDisplayName()+"</i> is already NOT required by service.";
             } else {
                 return "Attribute is already NOT required by service.";
             }
@@ -409,6 +438,16 @@ public class JsonErrorHandler {
                 return "Same external source is already assigned to your VO.";
             }
 
+        } else if ("ExtSourceAlreadyRemovedException".equalsIgnoreCase(errorName)) {
+
+            if (error.getExtSource() != null) {
+                return "Same external source was already removed from your VO."+
+                        "<p><strong>Name:</strong> "+error.getExtSource().getName()+"</br>" +
+                        "<strong>Type:</strong> "+error.getExtSource().getType();
+            } else {
+                return "Same external source was already removed from your VO.";
+            }
+
         } else if ("ExtSourceExistsException".equalsIgnoreCase(errorName)) {
 
             if (error.getExtSource() != null) {
@@ -439,6 +478,10 @@ public class JsonErrorHandler {
             // TODO - probably is never thrown to GUI ??
             return error.getErrorInfo();
 
+        } else if ("FacilityAlreadyRemovedException".equalsIgnoreCase(errorName)) {
+
+            return "Facility of the same name and type was already deleted.";
+
         } else if ("FacilityExistsException".equalsIgnoreCase(errorName)) {
 
             return "Facility of the same name and type already exists.";
@@ -464,6 +507,14 @@ public class JsonErrorHandler {
 
             return "Group with same name already exists in your VO. Group names must be unique in VO.";
 
+        } else if ("GroupAlreadyRemovedException".equalsIgnoreCase(errorName)) {
+
+            return "Same group was already removed from your VO/Group.";
+
+        } else if ("GroupAlreadyRemovedFromResourceException".equalsIgnoreCase(errorName)) {
+
+            return "Same group was already removed from resource.";
+
         } else if ("GroupNotDefinedOnResourceException".equalsIgnoreCase(errorName)) {
 
             return "Group is not assigned to Resource and therefore can't be removed from it.";
@@ -479,6 +530,10 @@ public class JsonErrorHandler {
         } else if ("GroupSynchronizationAlreadyRunningException".equalsIgnoreCase(errorName)) {
 
             return "Can't start group synchronization between Perun and external source, because it's already running.";
+
+        } else if ("HostAlreadyRemovedException".equalsIgnoreCase(errorName)) {
+
+            return "Same host was already removed from facility.";
 
         } else if ("HostExistsException".equalsIgnoreCase(errorName)) {
 
@@ -509,6 +564,10 @@ public class JsonErrorHandler {
 
             // has meaningfull message
             return error.getErrorInfo();
+
+        } else if ("MemberAlreadyRemovedException".equalsIgnoreCase(errorName)) {
+
+            return "Member was already removed from group/VO.";
 
         } else if ("MemberNotAdminException".equalsIgnoreCase(errorName)) {
 
@@ -597,6 +656,10 @@ public class JsonErrorHandler {
             // FIXME - better text on core side
             return error.getErrorInfo();
 
+        } else if ("ResourceAlreadyRemovedException".equalsIgnoreCase(errorName)) {
+
+            return "Same resource was already removed from facility (deleted).";
+
         } else if ("ResourceNotExistsException".equalsIgnoreCase(errorName)) {
 
             return "Requested resource (by id) doesn't exists.";
@@ -642,6 +705,10 @@ public class JsonErrorHandler {
                 return "Service is not assigned to resource.";
             }
 
+        } else if ("ServiceAlreadyRemovedException".equalsIgnoreCase(errorName)) {
+
+            return "Same service was already deleted.";
+
         } else if ("ServiceNotExistsException".equalsIgnoreCase(errorName)) {
 
             return "Requested service (by id or name) doesn't exists.";
@@ -651,14 +718,25 @@ public class JsonErrorHandler {
             // TODO - we don't support service packages yet
             return error.getErrorInfo();
 
-        } else if ("ServicesPackageNotExistsException".equalsIgnoreCase(errorName)) {
+        } else if ("ServiceAlreadyRemovedFromServicePackageException".equalsIgnoreCase(errorName)) {
 
-            // TODO - we don't support service packages yet
-            return error.getErrorInfo();
+            return "Same service was already removed from service package.";
+
+        } else if ("ServiceAlreadyRemovedException".equalsIgnoreCase(errorName)) {
+
+            return "Same service was already deleted.";
 
         } else if ("ServiceUserExpectedException".equalsIgnoreCase(errorName)) {
 
             return "Operation can't be done. Expected service type of user, but person type was provided instead.";
+
+        } else if ("ServiceUserAlreadyRemovedException".equalsIgnoreCase(errorName)) {
+
+            return "Same service user was already removed from user.";
+
+        } else if ("ServiceUserOwnerAlredyRemovedException".equalsIgnoreCase(errorName)) {
+
+            return "Same user was already removed from owners of service user.";
 
         } else if ("ServiceUserMustHaveOwnerException".equalsIgnoreCase(errorName)) {
 
@@ -694,6 +772,10 @@ public class JsonErrorHandler {
 
             return "Requested user external identity doesn't exists.";
 
+        } else if ("UserExtSourceAlreadyRemovedException".equalsIgnoreCase(errorName)) {
+
+            return "Same user's external identity was already removed from him/her.";
+
         } else if ("UserNotAdminException".equalsIgnoreCase(errorName)) {
 
             // FIXME - add vo, group or facility !!
@@ -703,6 +785,11 @@ public class JsonErrorHandler {
 
             // TODO - get user from exception
             return "Requested user (by id or external identity) doesn't exists.";
+
+        } else if ("UserAlreadyRemovedException".equalsIgnoreCase(errorName)) {
+
+            // TODO - shoud contain user objects
+            return "Same user was already deleted.";
 
         } else if ("VoExistsException".equalsIgnoreCase(errorName)) {
 

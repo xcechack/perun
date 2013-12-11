@@ -148,7 +148,7 @@ public class Auditer {
      */
     public void log(PerunSession sess, String message) throws InternalErrorException {
         if(TransactionSynchronizationManager.isActualTransactionActive()) {
-            log.debug("Auditer stores audit message to current transaction. Message: {}.", message);
+            log.trace("Auditer stores audit message to current transaction. Message: {}.", message);
             List<AuditerMessage> messages = (List<AuditerMessage>) TransactionSynchronizationManager.getResource(this);
             if(messages == null) {
                 messages = new ArrayList<AuditerMessage>();
@@ -248,11 +248,11 @@ public class Auditer {
     public void flush() {
         List<AuditerMessage> messages = (List<AuditerMessage>) TransactionSynchronizationManager.unbindResourceIfPossible(this);
         if(messages == null) {
-            log.debug("No message to flush");
+            log.trace("No message to flush");
             return;
         }
 
-        log.debug("Audit messages was flushed for current transaction.");
+        log.trace("Audit messages was flushed for current transaction.");
         synchronized (LOCK_DB_TABLE_AUDITER_LOG) {
             for(AuditerMessage auditerMessage : messages) {
                 log.info("AUDIT: {}", auditerMessage.getMessage());
@@ -288,7 +288,7 @@ public class Auditer {
 
     public void clean() {
         List<AuditerMessage> messages = (List<AuditerMessage>) TransactionSynchronizationManager.unbindResourceIfPossible(this);
-        log.debug("Audit messages erased for current transaction. {}", messages);
+        log.trace("Audit messages erased for current transaction. {}", messages);
     }
 
     /**
@@ -312,7 +312,24 @@ public class Auditer {
             throw new InternalErrorException(err);
         }
     }
+    
+    public int getLastMessageId() throws InternalErrorException {    
+       try {
+          return jdbc.queryForInt("select max(id) from auditer_log");
+       } catch (RuntimeException ex) {
+           throw new InternalErrorException(ex);
+       }
+    }
 
+      
+    public void setLastProcessedId(String consumerName, int lastProcessedId) throws InternalErrorException {
+      try {
+          jdbc.update("update auditer_consumers set last_processed_id=? where name=?", lastProcessedId, consumerName);
+      } catch (Exception ex) {
+          throw new InternalErrorException(ex);
+      }
+    }
+    
     public List<AuditMessage> getMessageForParser(int count) throws InternalErrorException {
         try {
             return jdbc.query("select " + auditMessageMappingSelectQuery + " from (select " + auditMessageMappingSelectQuery + ",row_number() over (ORDER BY id DESC) as rownumber from auditer_log) "+Compatibility.getAsAlias("temp")+" where rownumber <= ?",

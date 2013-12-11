@@ -10,7 +10,6 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
 ">
 	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
     	<property name="ignoreResourceNotFound" value="true"/>
-		<property name="ignoreUnresolvable" value="true"/>
     	<property name="locations">
         	<list>
             	<value>${perun.jdbc}</value>

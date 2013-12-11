@@ -100,7 +100,8 @@ public class EngineManagerImpl implements EngineManager {
 
     @Override
     public void loadSchedulingPool() {
-        log.info("I am going to load ExecService:Facility pairs from SchedulingPool.txt");
+        log.info("I am going to load ExecService:Facility pairs from db");
+        schedulingPool.reloadTasks();
 /*
         try {
             BufferedReader input = new BufferedReader(new FileReader("SchedulingPool.txt"));
@@ -126,12 +127,12 @@ public class EngineManagerImpl implements EngineManager {
             log.error(e.toString());
         }
   */
-        log.info("Loading ExecService:Facility pairs from SchedulingPool.txt has completed.");
+        log.info("Loading ExecService:Facility pairs from db has completed.");
     }
 
     @Override
     public void switchUnfinishedTasksToERROR() {
-        log.info("I am going to switched all unfinished tasks to ERROR and finished GEN tasks which data wasn't send to NONE");
+        log.info("I am going to switched all unfinished tasks to ERROR and finished GEN tasks which data wasn't send to ERROR as well");
 /*
         for (Task task : taskManager.listAllTasks(Integer.parseInt(propertiesBean.getProperty("engine.unique.id")))) {
             if(task.getStatus().equals(TaskStatus.DONE)) {
@@ -151,6 +152,21 @@ public class EngineManagerImpl implements EngineManager {
             }
         }
  */
+
+        /* we set everything found to error to report it back to dispatcher */
+        for(Task task : schedulingPool.getDoneTasks()) {
+            ExecService execService = task.getExecService();
+
+            if(execService.getExecServiceType().equals(ExecServiceType.GENERATE)) {
+                schedulingPool.setTaskStatus(task, TaskStatus.ERROR);
+            }
+        }
+        for(Task task : schedulingPool.getProcessingTasks()) {
+        	schedulingPool.setTaskStatus(task, TaskStatus.ERROR);
+        }
+        for(Task task : schedulingPool.getPlannedTasks()) {
+        	schedulingPool.setTaskStatus(task, TaskStatus.ERROR);
+        }
         log.info("I'm done with it.");
     }
 

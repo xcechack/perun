@@ -2,6 +2,7 @@ package cz.metacentrum.perun.engine.scheduling.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import javax.annotation.PreDestroy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 
 import cz.metacentrum.perun.core.api.Facility;
@@ -20,6 +22,7 @@ import cz.metacentrum.perun.engine.scheduling.SchedulingPool;
 import cz.metacentrum.perun.taskslib.model.ExecService;
 import cz.metacentrum.perun.taskslib.model.Task;
 import cz.metacentrum.perun.taskslib.model.Task.TaskStatus;
+import cz.metacentrum.perun.taskslib.service.TaskManager;
 
 @org.springframework.stereotype.Service(value = "schedulingPool")
 // Spring 3.0 default...
@@ -31,6 +34,9 @@ public class SchedulingPoolImpl implements SchedulingPool {
     private Map<TaskStatus, List<Task>> pool = new EnumMap<TaskStatus, List<Task>>(TaskStatus.class);
     private Map<Integer, Task> taskIdMap = new ConcurrentHashMap<Integer, Task>();
 
+    @Autowired
+    private TaskManager taskManager;
+    
     /*
     private BufferedWriter out = null;
     private FileWriter fstream = null;
@@ -59,6 +65,13 @@ public class SchedulingPoolImpl implements SchedulingPool {
     	}
     	// XXX should this be synchronized too?
     	taskIdMap.put(task.getId(), task);
+    	try {
+    		task.setSchedule(new Date(System.currentTimeMillis()));
+			taskManager.scheduleNewTask(task, 0);
+		} catch (InternalErrorException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     	return this.getSize();
 	}
 
@@ -96,6 +109,7 @@ public class SchedulingPoolImpl implements SchedulingPool {
 			pool.get(old).remove(task);
 			pool.get(status).add(task);
 		}
+		taskManager.updateTask(task, 0);
 	}
 
 	@Override
@@ -121,6 +135,7 @@ public class SchedulingPoolImpl implements SchedulingPool {
 			pool.get(task.getStatus()).remove(task);
 			taskIdMap.remove(task.getId());
 		}
+		taskManager.removeTask(task.getId(), 0);
 	}
 
 	@Override
@@ -185,7 +200,31 @@ public class SchedulingPoolImpl implements SchedulingPool {
 */        
     }
 
+	@Override
+	public void reloadTasks() {
+		this.clearPool();
+		for(Task task : taskManager.listAllTasks(0)) {
+    		TaskStatus status = task.getStatus();
+    		if(status == null) {
+    			task.setStatus(TaskStatus.NONE);
+    		}
+    		if(!pool.get(task.getStatus()).contains(task.getId())) {
+    			pool.get(task.getStatus()).add(task);
+    		}
+    		// XXX should this be synchronized too?
+    		taskIdMap.put(task.getId(), task);
+		}
+		
+	}
 
+	private void clearPool() {
+		pool = new EnumMap<TaskStatus, List<Task>>(TaskStatus.class);
+		taskIdMap = new ConcurrentHashMap<Integer, Task>();
+    	for(TaskStatus status : TaskStatus.class.getEnumConstants()) {
+    		pool.put(status, new ArrayList<Task>());
+    	}
+	}
+	
 /*
     class Serializator implements Runnable {
         private Pair<ExecService, Facility> pair = null;

@@ -445,10 +445,12 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     		}
     		
     		List<Destination> destinations = taskStatusManager.getTaskStatus(task).getSuccessfulDestinations();
+    		List<Destination> failedDestinations = task.getDestinations();
+    		failedDestinations.removeAll(destinations);
     		
     		StringBuilder destinations_s = new StringBuilder();
-    		destinations_s.append(destinations.remove(0).getDestination());
-    		for(Destination destination : destinations) {
+    		destinations_s.append(failedDestinations.remove(0).getDestination());
+    		for(Destination destination : failedDestinations) {
     			destinations_s.append(",");
     			destinations_s.append(destination);
     		}

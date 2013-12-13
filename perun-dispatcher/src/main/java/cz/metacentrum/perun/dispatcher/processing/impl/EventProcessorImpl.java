@@ -157,6 +157,7 @@ public class EventProcessorImpl implements EventProcessor {
 						task.setFacility(facility);
 						task.setExecService(execService);
 						task.setStatus(TaskStatus.NONE);
+						task.setRecurrence(execService.getDefaultRecurrence());
 						schedulingPool.addToPool(task, dispatcherQueue);
 						log.debug("  Created new task and added to the pool.");
 					}

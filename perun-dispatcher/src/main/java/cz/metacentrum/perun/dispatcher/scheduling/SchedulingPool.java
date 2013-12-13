@@ -1,5 +1,6 @@
 package cz.metacentrum.perun.dispatcher.scheduling;
 
+import java.util.Collection;
 import java.util.List;
 
 import cz.metacentrum.perun.core.api.Facility;
@@ -49,5 +50,13 @@ public interface SchedulingPool {
 	void setTaskStatus(Task task, TaskStatus status);
 
 	List<Task> getTasksForEngine(int clientID);
+
+	List<Task> getDoneTasks();
+
+	List<Task> getErrorTasks();
+
+	List<Task> getProcessingTasks();
+
+	List<Task> getPlannedTasks();
 
 }

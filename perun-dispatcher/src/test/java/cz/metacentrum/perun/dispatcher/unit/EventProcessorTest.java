@@ -29,7 +29,9 @@ public class EventProcessorTest extends TestBase {
 	@Autowired
 	private TestDataSourcePopulator testDataPopulator;	
 	@Autowired
-	private ExecService execService1;
+	private ExecService execservice1;
+	@Autowired
+	private ExecService execservice2;
 	@Autowired
 	private Facility facility1;
 	
@@ -100,7 +102,8 @@ public class EventProcessorTest extends TestBase {
 		// runs inside this thread, should end when message is delivered
 		// this necessitates the use of test timeout
 		evProcessor.run();
-		Assert.isTrue(execService1.equals(createdTask.getExecService()), "task execService is different");
+		log.debug("createdTask: " + createdTask);
+		Assert.isTrue(execservice2.equals(createdTask.getExecService()), "task execService is different");
 		Assert.isTrue(facility1.equals(createdTask.getFacility()), "task Facility is different");
 		Assert.isTrue(createdTask.getStatus().equals(TaskStatus.NONE));
 		

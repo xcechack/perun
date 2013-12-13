@@ -44,7 +44,9 @@ public class TestDataSourcePopulator {
 	private Owner owner1;
 	private Member member1;
 	@Autowired
-	private ExecService execService1;
+	private ExecService execservice1;
+	@Autowired
+	private ExecService execservice2;
 	
 	
 	public TestDataSourcePopulator() {
@@ -86,9 +88,13 @@ public class TestDataSourcePopulator {
 			// assign service to the resource
 			perun.getResourcesManager().assignService(testSession, resource1, service1);
 			// create execService
-			int id = generalServiceManager.insertExecService(testSession, execService1, owner1);
+			int id = generalServiceManager.insertExecService(testSession, execservice1, owner1);
 			// stash back the created id (this should be really done somewhere else)
-			execService1.setId(id);
+			execservice1.setId(id);
+			// create execService
+			id = generalServiceManager.insertExecService(testSession, execservice2, owner1);
+			// stash back the created id (this should be really done somewhere else)
+			execservice2.setId(id);
 		} catch (Exception e) {
 			throw new InternalErrorException("error populating database", e);
 		}
@@ -183,11 +189,11 @@ public class TestDataSourcePopulator {
 	}
 
 	public ExecService getExecService1() {
-		return execService1;
+		return execservice1;
 	}
 
 	public void setExecService1(ExecService execService1) {
-		this.execService1 = execService1;
+		this.execservice1 = execService1;
 	}
 
 }

@@ -7,11 +7,13 @@ import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.util.Assert;
 
 import cz.metacentrum.perun.core.api.Destination;
+import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
 import cz.metacentrum.perun.engine.TestBase;
 import cz.metacentrum.perun.engine.scheduling.ExecutorEngineWorker;
 import cz.metacentrum.perun.engine.scheduling.TaskResultListener;
 import cz.metacentrum.perun.taskslib.model.Task;
 import cz.metacentrum.perun.taskslib.model.TaskResult;
+import cz.metacentrum.perun.taskslib.service.TaskManager;
 
 public class ExecutorEngineWorkerImplTest extends TestBase implements TaskResultListener {
 
@@ -21,12 +23,14 @@ public class ExecutorEngineWorkerImplTest extends TestBase implements TaskResult
     private BeanFactory beanFactory;
 	@Autowired
 	private Task task1;
+	@Autowired
+	TaskManager taskManager;
 	private int count = 0;
 	
     @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
 	@Test
 	public void runTest() {
-		ExecutorEngineWorker worker = (ExecutorEngineWorker) beanFactory.getBean("executorEngineWorker");
+    	ExecutorEngineWorker worker = (ExecutorEngineWorker) beanFactory.getBean("executorEngineWorker");
 		worker.setTask(task1);
 		worker.setExecService(task1.getExecService());
 		worker.setFacility(task1.getFacility());

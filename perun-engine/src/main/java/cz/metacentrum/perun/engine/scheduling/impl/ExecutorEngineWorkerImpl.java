@@ -38,10 +38,8 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
     private TaskResultListener resultListener;
     @Autowired
     private TaskManager taskManager;
-/*
     @Autowired
     private TaskResultDao taskResultDao;
-*/
     private Task task;
     private Facility facility;
     private ExecService execService;
@@ -136,7 +134,7 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
 
                 task.setEndTime(new Date(System.currentTimeMillis()));
                 
-                //taskResultDao.insertNewTaskResult(taskResult, getEngineId());
+                taskResultDao.insertNewTaskResult(taskResult, getEngineId());
 
                 if(taskResult.getStatus().equals(TaskStatus.ERROR)) {
                   log.info("SEND task failed. Ret code " + returnCode + ". STDOUT: {}  STDERR: {}. Task: " + task, stdout, stderr);
@@ -157,13 +155,11 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
                 taskResult.setStatus(TaskResultStatus.ERROR);
                 taskResult.setTimestamp(new Date(System.currentTimeMillis()));
                 resultListener.onTaskDestinationError(task, destination, taskResult);
-/*
                 try {
                 	taskResultDao.insertNewTaskResult(taskResult, getEngineId());
                 } catch (InternalErrorException e1) {
                     log.error(e.toString(), e);
                 }
-*/
             } finally {
                   String ret = returnCode == -1 ? "unknown" : String.valueOf(returnCode);
                   log.debug("SEND task ended. Ret code " + ret + ". STDOUT: {}  STDERR: {}. Task: " + task, stdout, stderr);
@@ -184,7 +180,6 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
         this.taskManager = taskManager;
     }
 
-/*
     public TaskResultDao getTaskResultDao() {
         return taskResultDao;
     }
@@ -192,7 +187,7 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
     public void setTaskResultDao(TaskResultDao taskResultDao) {
         this.taskResultDao = taskResultDao;
     }
-*/
+
     public Task getTask() {
         return task;
     }

@@ -57,7 +57,8 @@ public class TaskSchedulerImpl implements TaskScheduler {
 	}
 
 	// TODO ensure dependant tasks with scope DESTINATION go to the same engine
-	private void scheduleTask(Task task) {
+	@Override
+	public void scheduleTask(Task task) {
 		ExecService execService = task.getExecService();
 		Facility facility = task.getFacility();
 		Date time = new Date(System.currentTimeMillis());

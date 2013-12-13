@@ -2,6 +2,7 @@ package cz.metacentrum.perun.dispatcher.scheduling;
 
 
 import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
+import cz.metacentrum.perun.taskslib.model.Task;
 
 public interface TaskScheduler {
 
@@ -14,5 +15,7 @@ public interface TaskScheduler {
 	void processPool() throws InternalErrorException;
 
     int getPoolSize();
+
+	void scheduleTask(Task task);
 
 }

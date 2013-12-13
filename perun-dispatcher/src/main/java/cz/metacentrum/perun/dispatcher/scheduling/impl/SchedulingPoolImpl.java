@@ -22,7 +22,6 @@ import cz.metacentrum.perun.taskslib.service.TaskManager;
 
 // TODO: this shares a lot of code with engine.SchedulingPoolImpl - create abstract base with implementation specific indexes
 
-// TODO: PERSISTANCE
 
 @org.springframework.stereotype.Service("schedulingPool")
 public class SchedulingPoolImpl implements SchedulingPool {
@@ -44,7 +43,7 @@ public class SchedulingPoolImpl implements SchedulingPool {
 
     @Override
 	public int getSize() {
-		return pool.size();
+		return tasksById.size();
 	}
 
 	@Override
@@ -52,11 +51,21 @@ public class SchedulingPoolImpl implements SchedulingPool {
 		// XXX needs to be synchronized, but on what?
 		synchronized(tasksById) {
 			if(!tasksById.containsKey(task.getId())) {
+				log.debug("Adding task to pool " + task);
+				if(null == task.getStatus()) {
+					task.setStatus(TaskStatus.NONE);
+				}
 				tasksById.put(task.getId(), new Pair<Task, DispatcherQueue>(task, dispatcherQueue));
 				tasksByServiceAndFacility.put(new Pair<ExecService, Facility>(task.getExecService(), task.getFacility()), task);
 				pool.get(task.getStatus()).add(task);
 			}
 		}
+		try {
+			taskManager.scheduleNewTask(task, dispatcherQueue.getClientID());
+		} catch (InternalErrorException e) {
+			log.error("Error storing task " + task + " into database: " + e.getMessage());
+		}
+		log.debug("addToPool: current pool size=" + getSize());
 		return getSize();
 	}
 
@@ -72,13 +81,14 @@ public class SchedulingPoolImpl implements SchedulingPool {
 
 	@Override
 	public void removeTask(Task task) {
-		// TODO Auto-generated method stub
+		Pair<Task, DispatcherQueue> val;
+		synchronized(pool) {
+			pool.get(task.getStatus()).remove(task);
+			val = tasksById.remove(task.getId());
+			tasksByServiceAndFacility.remove(new Pair(task.getExecService(), task.getFacility()));
+		}
+		taskManager.removeTask(task.getId(), val.getRight().getClientID());
 
-	}
-
-	@Override
-	public List<Task> getWaitingTasks() {
-		return pool.get(TaskStatus.NONE);
 	}
 
 	@Override
@@ -97,8 +107,14 @@ public class SchedulingPoolImpl implements SchedulingPool {
 
 	@Override
 	public void setTaskStatus(Task task, TaskStatus status) {
-		// TODO Auto-generated method stub
-		
+		TaskStatus old = task.getStatus();
+		task.setStatus(status);
+		// move task to the appropriate place
+		if(!old.equals(status)) {
+			pool.get(old).remove(task);
+			pool.get(status).add(task);
+		}
+		taskManager.updateTask(task, tasksById.get(task.getId()).getRight().getClientID());
 	}
 
 	@Override
@@ -110,6 +126,31 @@ public class SchedulingPoolImpl implements SchedulingPool {
 			}
 		}
 		return result;
+	}
+
+	@Override
+	public List<Task> getWaitingTasks() {
+		return new ArrayList<Task>(pool.get(TaskStatus.NONE));
+	}
+
+	@Override
+	public List<Task> getDoneTasks() {
+		return new ArrayList<Task>(pool.get(TaskStatus.DONE));
+	}
+
+	@Override
+	public List<Task> getErrorTasks() {
+		return new ArrayList<Task>(pool.get(TaskStatus.ERROR));
+	}
+
+	@Override
+	public List<Task> getProcessingTasks() {
+		return new ArrayList<Task>(pool.get(TaskStatus.PROCESSING));
+	}
+
+	@Override
+	public List<Task> getPlannedTasks() {
+		return new ArrayList<Task>(pool.get(TaskStatus.PLANNED));
 	}
 
 }

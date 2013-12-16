@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -47,6 +48,11 @@ public class SchedulingPoolTest extends TestBase {
     	task1.setSchedule(new Date(System.currentTimeMillis()));
     	dispatcherQueue = new DispatcherQueue(1, "test-queue");
     	schedulingPool.addToPool(task1, dispatcherQueue);
+    }
+    
+    @After
+    public void cleanup() {
+    	schedulingPool.clear();
     }
     
     @IfProfileValue(name="perun.test.groups", values=("unit-tests"))

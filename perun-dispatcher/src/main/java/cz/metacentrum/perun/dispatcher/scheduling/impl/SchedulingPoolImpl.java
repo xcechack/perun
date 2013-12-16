@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -65,7 +66,6 @@ public class SchedulingPoolImpl implements SchedulingPool {
 		} catch (InternalErrorException e) {
 			log.error("Error storing task " + task + " into database: " + e.getMessage());
 		}
-		log.debug("addToPool: current pool size=" + getSize());
 		return getSize();
 	}
 
@@ -151,6 +151,18 @@ public class SchedulingPoolImpl implements SchedulingPool {
 	@Override
 	public List<Task> getPlannedTasks() {
 		return new ArrayList<Task>(pool.get(TaskStatus.PLANNED));
+	}
+
+	@Override
+	public void clear() {
+		synchronized(tasksById) {
+			tasksById.clear();
+			tasksByServiceAndFacility.clear();
+			for(TaskStatus status : TaskStatus.class.getEnumConstants()) {
+					pool.get(status).clear();
+			}
+		}
+		//taskManager.removeAllTasks();
 	}
 
 }

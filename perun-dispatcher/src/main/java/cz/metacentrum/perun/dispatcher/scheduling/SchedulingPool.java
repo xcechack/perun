@@ -59,4 +59,6 @@ public interface SchedulingPool {
 
 	List<Task> getPlannedTasks();
 
+	void clear();
+
 }

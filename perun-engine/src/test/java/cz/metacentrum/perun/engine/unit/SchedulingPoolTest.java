@@ -35,10 +35,13 @@ public class SchedulingPoolTest extends TestBase {
 
     @Autowired
     private Task task1;
+    @Autowired
+    private Task task2;
     
     @Before
     public void setup() {
     	task1.setStatus(TaskStatus.NONE);
+    	task2.setStatus(TaskStatus.NONE);
     	schedulingPool.addToPool(task1);
     }
     
@@ -48,8 +51,6 @@ public class SchedulingPoolTest extends TestBase {
     	Assert.isTrue(schedulingPool.getSize() == 1, "original size is 1");
     	schedulingPool.addToPool(task1);
     	Assert.isTrue(schedulingPool.getSize() == 1, "new size is 1"); // pool already contains this task
-    	Task task2 = new Task();
-    	task2.setId(768);
     	schedulingPool.addToPool(task2);
     	Assert.isTrue(schedulingPool.getSize() == 2, "new size is 2");
     }

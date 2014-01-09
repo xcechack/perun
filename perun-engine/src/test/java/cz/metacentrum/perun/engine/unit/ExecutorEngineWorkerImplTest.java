@@ -1,6 +1,9 @@
 package cz.metacentrum.perun.engine.unit;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.IfProfileValue;
@@ -10,12 +13,15 @@ import cz.metacentrum.perun.core.api.Destination;
 import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
 import cz.metacentrum.perun.engine.TestBase;
 import cz.metacentrum.perun.engine.scheduling.ExecutorEngineWorker;
+import cz.metacentrum.perun.engine.scheduling.SchedulingPool;
 import cz.metacentrum.perun.engine.scheduling.TaskResultListener;
+import cz.metacentrum.perun.engine.scheduling.impl.TaskExecutorEngineImpl;
 import cz.metacentrum.perun.taskslib.model.Task;
 import cz.metacentrum.perun.taskslib.model.TaskResult;
 import cz.metacentrum.perun.taskslib.service.TaskManager;
 
 public class ExecutorEngineWorkerImplTest extends TestBase implements TaskResultListener {
+    private final static Logger log = LoggerFactory.getLogger(ExecutorEngineWorkerImplTest.class);
 
 	@Autowired
 	private Destination destination1;
@@ -24,14 +30,21 @@ public class ExecutorEngineWorkerImplTest extends TestBase implements TaskResult
 	@Autowired
 	private Task task1;
 	@Autowired
+	SchedulingPool schedulingPool;
+	@Autowired
 	TaskManager taskManager;
+	
 	private int count = 0;
 	
-    @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
+	@IfProfileValue(name="perun.test.groups", values=("unit-tests"))
 	@Test
-	public void runTest() {
+	public void runTest() throws InternalErrorException {
     	ExecutorEngineWorker worker = (ExecutorEngineWorker) beanFactory.getBean("executorEngineWorker");
-		worker.setTask(task1);
+		log.debug("task " + task1.toString());
+		schedulingPool.addToPool(task1);
+		Task task = taskManager.getTaskById(1, 0);
+    	log.debug("task in db " + ((task == null) ? "null" : task.toString()));
+    	worker.setTask(task1);
 		worker.setExecService(task1.getExecService());
 		worker.setFacility(task1.getFacility());
 		worker.setDestination(destination1);

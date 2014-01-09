@@ -51,6 +51,8 @@ public interface TaskDao {
 
     int scheduleNewTask(Task task, int engineID) throws InternalErrorException;
 
+    int insertTask(Task task, int engineID) throws InternalErrorException;
+    
     Task getTask(ExecService execService, Facility facility, int engineID);
 
     Task getTask(int execServiceId, int facilityId, int engineID);

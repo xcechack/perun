@@ -48,4 +48,6 @@ public interface TaskManager {
     int countTasks(int engineID);
 
     List<Task> listAllTasksNotInState(TaskStatus state, int engineID);
+
+    void insertTask(Task task, int engineID) throws InternalErrorException;
 }

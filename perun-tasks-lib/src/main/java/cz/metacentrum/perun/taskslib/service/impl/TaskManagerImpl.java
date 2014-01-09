@@ -34,6 +34,11 @@ public class TaskManagerImpl implements TaskManager {
     }
 
     @Override
+    public void insertTask(Task task, int engineID) throws InternalErrorException {
+        taskDao.insertTask(task, engineID);
+    }
+
+    @Override
     public Task getTask(ExecService execService, Facility facility, int engineID) {
         return taskDao.getTask(execService, facility);
     }

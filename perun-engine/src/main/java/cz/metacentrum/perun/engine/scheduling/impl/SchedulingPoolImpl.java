@@ -59,7 +59,6 @@ public class SchedulingPoolImpl implements SchedulingPool {
     			task.setStatus(TaskStatus.NONE);
     		}
     		if(!pool.get(task.getStatus()).contains(task.getId())) {
-    			log.debug("POOLPUT: into " + task.getStatus());
     			pool.get(task.getStatus()).add(task);
     		}
     	}
@@ -67,10 +66,10 @@ public class SchedulingPoolImpl implements SchedulingPool {
     	taskIdMap.put(task.getId(), task);
     	try {
     		task.setSchedule(new Date(System.currentTimeMillis()));
-			taskManager.scheduleNewTask(task, 0);
+			taskManager.insertTask(task, 0);
+			log.debug("adding task " + task.toString() + " to database");
 		} catch (InternalErrorException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("Error storing task into database: " + e.getMessage());
 		}
     	return this.getSize();
 	}

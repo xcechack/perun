@@ -28,6 +28,8 @@ http://www.springframework.org/schema/task http://www.springframework.org/schema
     
     <!-- Importing Perun Core... -->
     <import resource="classpath:perun-beans.xml"/>
+	<!-- Import Perun taskslib -->
+    <import resource="classpath:perun-tasks-lib-applicationcontext.xml"/>
     	
     <tx:advice id="txAdvice">
         <tx:attributes>

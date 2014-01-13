@@ -285,9 +285,10 @@ http://www.springframework.org/schema/task http://www.springframework.org/schema
     
     <bean id="properties" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
         <property name="locations">
-                       <list>
-			   				<value>/etc/perunv3/perun.properties</value>
-                       </list>            
+            <list>
+                <value>file:${perun.conf}/perun.properties</value>
+                <value>file:${perun.conf.custom}/perun.properties</value>
+            </list>
         </property>
         <property name="ignoreResourceNotFound" value="true" />
                <!--  these are just defaults not meant for actual deployment, but enough to make tests run happily -->

@@ -115,7 +115,7 @@ http://www.springframework.org/schema/task http://www.springframework.org/schema
 	</bean>  
 	
 	<bean id="propagationMaintainerJob" class="org.springframework.scheduling.quartz.JobDetailBean">
-		<property name="jobClass" ref="cz.metacentrum.perun.dispatcher.job.PropagationMaintainerJob" />
+		<property name="jobClass" value="cz.metacentrum.perun.dispatcher.job.PropagationMaintainerJob" />
 		<property name="jobDataAsMap">
 			<map>
 				<entry key="propagationMaintainer" value-ref="propagationMaintainer" />

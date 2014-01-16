@@ -104,7 +104,7 @@ public class EventProcessorImpl implements EventProcessor {
 						}
 					}
 				} catch (Exception e) {
-					log.error(e.toString(), e);
+					log.error(e.getMessage(), e);
 				}
 				try {
 					//TODO: Remove?

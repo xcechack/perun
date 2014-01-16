@@ -1,5 +1,6 @@
 package cz.metacentrum.perun.dispatcher.processing.impl;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
@@ -158,6 +159,7 @@ public class EventProcessorImpl implements EventProcessor {
 						task.setExecService(execService);
 						task.setStatus(TaskStatus.NONE);
 						task.setRecurrence(execService.getDefaultRecurrence());
+						task.setSchedule(new Date(System.currentTimeMillis()));
 						schedulingPool.addToPool(task, dispatcherQueue);
 						log.debug("  Created new task and added to the pool.");
 					}

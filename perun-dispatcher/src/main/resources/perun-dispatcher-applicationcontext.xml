@@ -110,6 +110,8 @@ http://www.springframework.org/schema/task http://www.springframework.org/schema
 			<list>
 				<!--<ref bean="maintenanceJobTrigger" />-->
 				<ref bean="checkInJobTrigger" />
+				<ref bean="processPoolJobTrigger" />
+				<ref bean="propagationMaintainerJobTrigger" />
 			</list>
 		</property>
 	</bean>  

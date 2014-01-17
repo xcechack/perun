@@ -51,6 +51,8 @@ public class TaskSchedulerImpl implements TaskScheduler {
 				 propertiesBean.getProperty("perun.principal.extSourceName"),
 				 propertiesBean.getProperty("perun.principal.extSourceType")));
 
+		log.debug("pool contains " + schedulingPool.getSize() + " tasks in total");
+		log.debug("  " + schedulingPool.getWaitingTasks().size() + " tasks are going to be processed");
 		for(Task task : schedulingPool.getWaitingTasks()) {
 			scheduleTask(task);
 		}

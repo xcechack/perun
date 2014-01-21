@@ -2,6 +2,7 @@ package cz.metacentrum.perun.dispatcher.scheduling.impl;
 
 
 import java.util.Date;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
 
@@ -21,6 +22,7 @@ import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
 import cz.metacentrum.perun.core.api.exceptions.PrivilegeException;
 import cz.metacentrum.perun.core.api.exceptions.ServiceNotExistsException;
 import cz.metacentrum.perun.dispatcher.jms.DispatcherQueue;
+import cz.metacentrum.perun.dispatcher.jms.DispatcherQueuePool;
 import cz.metacentrum.perun.dispatcher.scheduling.DenialsResolver;
 import cz.metacentrum.perun.dispatcher.scheduling.DependenciesResolver;
 import cz.metacentrum.perun.dispatcher.scheduling.SchedulingPool;
@@ -44,6 +46,8 @@ public class TaskSchedulerImpl implements TaskScheduler {
 	private PerunSession perunSession;
 	@Autowired
 	private Properties propertiesBean;
+	@Autowired
+	private DispatcherQueuePool dispatcherQueuePool;
 	
 	@Override
 	public void processPool() throws InternalErrorException {
@@ -71,7 +75,7 @@ public class TaskSchedulerImpl implements TaskScheduler {
 			// TODO Auto-generated catch block
 			return;
 		}
-		
+
 		log.debug("Facility to be processed: " + facility.getId() + ", ExecService to be processed: " + execService.getId());
 
         List<ExecService> dependantServices = null;
@@ -92,6 +96,13 @@ public class TaskSchedulerImpl implements TaskScheduler {
         			proceed = false;
         			break;
         		}
+        		try {
+					if(dispatcherQueue == null && schedulingPool.getQueueForTask(dependantServiceTask) != null) {
+						schedulingPool.setQueueForTask(task, schedulingPool.getQueueForTask(dependantServiceTask));
+					}
+				} catch (InternalErrorException e) {
+					// XXX weird
+				}
         	}	
         }	
         if (proceed) {
@@ -264,34 +275,47 @@ public class TaskSchedulerImpl implements TaskScheduler {
 		try {
 			dispatcherQueue = schedulingPool.getQueueForTask(task);
 		} catch (InternalErrorException e1) {
-			// TODO Auto-generated catch block
+			log.error("No engine set for task " + task.toString() + ", could not send it!");
 			return;
 		}
+
+		if(dispatcherQueue == null) {
+			// where should we send the task?
+			if(dispatcherQueuePool.poolSize() > 0) {
+				dispatcherQueue = dispatcherQueuePool.getPool().iterator().next();
+				schedulingPool.setQueueForTask(task, dispatcherQueue);
+			} else {
+				// bad luck...
+				log.error("Task " + task.toString() + " has no engine assigned and there are no engines registered..."); 
+				return;
+			}
+		}
+		
 		// task|[engine_id]|[task_id][exec_service_id][facility]|[destination_list]|[dependency_list]
 		//   - the task|[engine_id] part is added by dispatcherQueue
         List<Destination> destinations = task.getDestinations();
         if(destinations == null) {
+        	log.debug("No destinations for task " + task.toString() + ", trying to query the database...");
         	try {
         		destinations = perun.getServicesManager().getDestinations(perunSession, task.getExecService().getService(), task.getFacility());
         	} catch (ServiceNotExistsException e) {
-        		// TODO Auto-generated catch block
-        		e.printStackTrace();
+        		log.error("No destinations found for task " + task.toString());
         	} catch (FacilityNotExistsException e) {
-        		// TODO Auto-generated catch block
-        		e.printStackTrace();
+        		log.error("Facility for task does not exist..." + task.toString());
+        		// TODO: remove the task?
         	} catch (PrivilegeException e) {
-        		// TODO Auto-generated catch block
-        		e.printStackTrace();
+        		log.error("Privilege error accessing the database: " + e.getMessage());
         	} catch (InternalErrorException e) {
-        		// TODO Auto-generated catch block
-        		e.printStackTrace();
+        		log.error("Internal error: " + e.getMessage());
         	}
         }
         task.setDestinations(destinations);
         StringBuilder destinations_s = new StringBuilder("Destinations [");
-		for(Destination destination: destinations) {
-			destinations_s.append(destination.serializeToString() + ", ");
-		}
+        if(destinations != null) {
+        	for(Destination destination: destinations) {
+        		destinations_s.append(destination.serializeToString() + ", ");
+        	}
+        }
 		destinations_s.append("]");
 		String dependencies = "";
 		dispatcherQueue.sendMessage("[" + task.getId() + "][" + task.getExecServiceId() 
@@ -302,8 +326,7 @@ public class TaskSchedulerImpl implements TaskScheduler {
 
 	@Override
 	public int getPoolSize() {
-		// TODO Auto-generated method stub
-		return 0;
+		return schedulingPool.getSize();
 	}
 
 	public SchedulingPool getSchedulingPool() {

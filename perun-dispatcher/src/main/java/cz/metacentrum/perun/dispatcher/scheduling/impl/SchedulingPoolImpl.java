@@ -15,6 +15,7 @@ import cz.metacentrum.perun.core.api.Facility;
 import cz.metacentrum.perun.core.api.Pair;
 import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
 import cz.metacentrum.perun.dispatcher.jms.DispatcherQueue;
+import cz.metacentrum.perun.dispatcher.jms.DispatcherQueuePool;
 import cz.metacentrum.perun.dispatcher.scheduling.SchedulingPool;
 import cz.metacentrum.perun.taskslib.model.ExecService;
 import cz.metacentrum.perun.taskslib.model.Task;
@@ -35,6 +36,8 @@ public class SchedulingPoolImpl implements SchedulingPool {
 
     @Autowired
     private TaskManager taskManager;
+    @Autowired
+    private DispatcherQueuePool dispatcherQueuePool;
     
     public SchedulingPoolImpl() {
     	for(TaskStatus status : TaskStatus.class.getEnumConstants()) {
@@ -169,8 +172,9 @@ public class SchedulingPoolImpl implements SchedulingPool {
 	public void reloadTasks() {
 		log.debug("Going to reload tasks from database...");
 		this.clear();
-		for(Task task : taskManager.listAllTasks(0)) {
-    		TaskStatus status = task.getStatus();
+		for(Pair<Task, Integer> pair : taskManager.listAllTasksAndClients()) {
+			Task task = pair.getLeft();
+			TaskStatus status = task.getStatus();
     		if(status == null) {
     			task.setStatus(TaskStatus.NONE);
     		}
@@ -178,7 +182,7 @@ public class SchedulingPoolImpl implements SchedulingPool {
     			pool.get(task.getStatus()).add(task);
     		}
     		// XXX should this be synchronized too?
-    		tasksById.put(task.getId(), new Pair<Task, DispatcherQueue>(task, null));
+    		tasksById.put(task.getId(), new Pair<Task, DispatcherQueue>(task, dispatcherQueuePool.getDispatcherQueueByClient(pair.getRight())));
     		tasksByServiceAndFacility.put(new Pair<ExecService, Facility>(task.getExecService(), task.getFacility()), task);
     		// TODO: what about possible duplicates?
     		log.debug("Added task " + task.toString());

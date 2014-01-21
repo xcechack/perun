@@ -17,6 +17,7 @@ import cz.metacentrum.perun.dispatcher.jms.SystemQueueProcessor;
 import cz.metacentrum.perun.dispatcher.parser.ParserManager;
 import cz.metacentrum.perun.dispatcher.processing.EventProcessor;
 import cz.metacentrum.perun.dispatcher.processing.SmartMatcher;
+import cz.metacentrum.perun.dispatcher.scheduling.SchedulingPool;
 import cz.metacentrum.perun.dispatcher.service.DispatcherManager;
 
 
@@ -42,6 +43,8 @@ public class DispatcherManagerImpl implements DispatcherManager {
 	private EventProcessor eventProcessor;
 	@Autowired
 	private SmartMatcher smartMatcher;
+	@Autowired
+	private SchedulingPool schedulingPool;
 	@Autowired
 	private Properties propertiesBean;
 	
@@ -123,6 +126,11 @@ public class DispatcherManagerImpl implements DispatcherManager {
 
 	public void setSmartMatcher(SmartMatcher smartMatcher) {
 		this.smartMatcher = smartMatcher;
+	}
+
+	@Override
+	public void loadSchedulingPool() {
+		schedulingPool.reloadTasks();
 	}
 
 /*

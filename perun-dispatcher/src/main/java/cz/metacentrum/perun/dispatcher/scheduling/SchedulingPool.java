@@ -47,6 +47,8 @@ public interface SchedulingPool {
 
 	DispatcherQueue getQueueForTask(Task task) throws InternalErrorException;
 
+	void setQueueForTask(Task task, DispatcherQueue queueForTask);
+
 	void setTaskStatus(Task task, TaskStatus status);
 
 	List<Task> getTasksForEngine(int clientID);
@@ -60,5 +62,7 @@ public interface SchedulingPool {
 	List<Task> getPlannedTasks();
 
 	void clear();
+
+	void reloadTasks();
 
 }

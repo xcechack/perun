@@ -46,6 +46,8 @@ public class DispatcherStarter {
 			// Prefetch rules for all the Engnes in the Perun DB and create
 			// Dispatcher queues
 			dispatcherStarter.dispatcherManager.prefetchRulesAndDispatcherQueues();
+			// reload tasksk from database
+			dispatcherStarter.dispatcherManager.loadSchedulingPool();
 			// Start parsers (mining data both from Grouper and PerunDB)
 			dispatcherStarter.dispatcherManager.startParsingData();
 			// Start Event Processor

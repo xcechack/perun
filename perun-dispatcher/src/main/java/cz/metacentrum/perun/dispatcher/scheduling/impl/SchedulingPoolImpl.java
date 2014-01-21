@@ -165,4 +165,29 @@ public class SchedulingPoolImpl implements SchedulingPool {
 		//taskManager.removeAllTasks();
 	}
 
+	@Override
+	public void reloadTasks() {
+		this.clear();
+		for(Task task : taskManager.listAllTasks(0)) {
+    		TaskStatus status = task.getStatus();
+    		if(status == null) {
+    			task.setStatus(TaskStatus.NONE);
+    		}
+    		if(!pool.get(task.getStatus()).contains(task.getId())) {
+    			pool.get(task.getStatus()).add(task);
+    		}
+    		// XXX should this be synchronized too?
+    		tasksById.put(task.getId(), new Pair<Task, DispatcherQueue>(task, null));
+    		tasksByServiceAndFacility.put(new Pair<ExecService, Facility>(task.getExecService(), task.getFacility()), task);
+    		// TODO: what about possible duplicates?
+		}
+		
+	}
+
+	@Override
+	public void setQueueForTask(Task task, DispatcherQueue queueForTask) {
+		tasksById.get(task.getId()).put(task, queueForTask);
+	}
+
+
 }

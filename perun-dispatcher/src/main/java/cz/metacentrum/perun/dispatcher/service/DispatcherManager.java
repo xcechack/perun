@@ -37,4 +37,7 @@ public interface DispatcherManager {
 	void startPocessingEvents();
 	
 	void stopPocessingEvents();
+	
+	///Task database///
+	void loadSchedulingPool();
 }

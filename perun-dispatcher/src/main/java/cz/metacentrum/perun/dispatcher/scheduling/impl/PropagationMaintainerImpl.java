@@ -238,7 +238,24 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     	for(Task task: suspiciousTasks) {
             //count how many minutes the task stays in one state - if the state is PLANNED count it from when it was scheduled ; if it is PROCESSING count it from when it started
     		Date started = task.getStartTime();
-    		int howManyMinutesAgo = (int) (System.currentTimeMillis() - ( task.getStatus().equals(TaskStatus.PLANNED) && started != null ? task.getSchedule() : started ).getTime()) / 1000 / 60;
+    		Date scheduled = task.getSchedule();
+    		TaskStatus status = task.getStatus();
+
+    		if(status == null) {
+                log.error("ERROR: Task presumably in PLANNED or PROCESSING state, but does not have a valid status. Switching to ERROR. {}", task);
+                task.setEndTime(new Date(System.currentTimeMillis()));
+                schedulingPool.setTaskStatus(task, TaskStatus.ERROR);
+                continue;
+    		}
+    		
+    		if(started == null && scheduled == null) {
+                log.error("ERROR: Task presumably in PLANNED or PROCESSING state, but does not have a valid scheduled or started time. Switching to ERROR. {}", task);
+                task.setEndTime(new Date(System.currentTimeMillis()));
+                schedulingPool.setTaskStatus(task, TaskStatus.ERROR);
+                continue;
+    		}
+    		
+    		int howManyMinutesAgo = (int) (System.currentTimeMillis() - ( started == null ? scheduled : started ).getTime()) / 1000 / 60;
 
             //If too much time has passed something is broken
             if (howManyMinutesAgo >= 60) {

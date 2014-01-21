@@ -167,6 +167,7 @@ public class SchedulingPoolImpl implements SchedulingPool {
 
 	@Override
 	public void reloadTasks() {
+		log.debug("Going to reload tasks from database...");
 		this.clear();
 		for(Task task : taskManager.listAllTasks(0)) {
     		TaskStatus status = task.getStatus();
@@ -180,6 +181,7 @@ public class SchedulingPoolImpl implements SchedulingPool {
     		tasksById.put(task.getId(), new Pair<Task, DispatcherQueue>(task, null));
     		tasksByServiceAndFacility.put(new Pair<ExecService, Facility>(task.getExecService(), task.getFacility()), task);
     		// TODO: what about possible duplicates?
+    		log.debug("Added task " + task.toString());
 		}
 		
 	}

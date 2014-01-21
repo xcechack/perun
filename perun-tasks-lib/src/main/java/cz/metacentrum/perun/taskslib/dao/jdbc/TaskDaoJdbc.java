@@ -15,6 +15,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
 
 import cz.metacentrum.perun.core.api.Facility;
+import cz.metacentrum.perun.core.api.Pair;
 import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
 import cz.metacentrum.perun.core.impl.FacilitiesManagerImpl;
 import cz.metacentrum.perun.core.impl.ServicesManagerImpl;
@@ -37,7 +38,7 @@ public class TaskDaoJdbc extends JdbcDaoSupport implements TaskDao {
   public static final SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 
   public final static String taskMappingSelectQuery = " tasks.id as tasks_id, tasks.schedule as tasks_schedule, tasks.recurrence as tasks_recurrence, " +
-  		"tasks.delay as tasks_delay, tasks.status as tasks_status, tasks.start_time as tasks_start_time, tasks.end_time as tasks_end_time ";
+  		"tasks.delay as tasks_delay, tasks.status as tasks_status, tasks.start_time as tasks_start_time, tasks.end_time as tasks_end_time, tasks.engine_id as tasks_engine_id ";
 
   public static final RowMapper<Task> TASK_ROWMAPPER = new RowMapper<Task>() {
 
@@ -82,7 +83,50 @@ public class TaskDaoJdbc extends JdbcDaoSupport implements TaskDao {
 
   };
 
-  @Override
+  public static final RowMapper<Pair<Task, Integer>> TASK_CLIENT_ROWMAPPER = new RowMapper<Pair<Task, Integer>>() {
+
+	    public Pair<Task, Integer> mapRow(ResultSet rs, int i) throws SQLException {
+
+	      Task task = new Task();
+
+	      task.setDelay(rs.getInt("tasks_delay"));
+	      task.setId(rs.getInt("tasks_id"));
+	      task.setRecurrence(rs.getInt("tasks_recurrence"));
+
+	      if (rs.getTimestamp("tasks_start_time") != null) {
+	        task.setStartTime(rs.getTimestamp("tasks_start_time"));
+	      }
+	      if (rs.getTimestamp("tasks_schedule") != null) {
+	        task.setSchedule(rs.getTimestamp("tasks_schedule"));
+	      }
+	      if (rs.getTimestamp("tasks_end_time") != null) {
+	        task.setEndTime(rs.getTimestamp("tasks_end_time"));
+	      }
+
+	      if (rs.getString("tasks_status").equalsIgnoreCase(TaskStatus.DONE.toString())) {
+	        task.setStatus(TaskStatus.DONE);
+	      } else if (rs.getString("tasks_status").equalsIgnoreCase(TaskStatus.ERROR.toString())) {
+	        task.setStatus(TaskStatus.ERROR);
+	      } else if (rs.getString("tasks_status").equalsIgnoreCase(TaskStatus.NONE.toString())) {
+	        task.setStatus(TaskStatus.NONE);
+	      } else if (rs.getString("tasks_status").equalsIgnoreCase(TaskStatus.PLANNED.toString())) {
+	        task.setStatus(TaskStatus.PLANNED);
+	      } else if (rs.getString("tasks_status").equalsIgnoreCase(TaskStatus.PROCESSING.toString())) {
+	        task.setStatus(TaskStatus.PROCESSING);
+	      } else {
+	        throw new IllegalArgumentException("Task status unknown :-(");
+	      }
+
+	      task.setFacility(FacilitiesManagerImpl.FACILITY_MAPPER.mapRow(rs, i));
+	      
+	      task.setExecService(ExecServiceDaoJdbc.EXEC_SERVICE_ROWMAPPER.mapRow(rs, i));
+
+	      return new Pair<Task, Integer>(task, rs.getInt("tasks_engine_id"));
+	    }
+
+	  };
+
+	  @Override
   public int scheduleNewTask(Task task, int engineID) throws InternalErrorException {
     int newTaskId = 0;
     try {
@@ -208,6 +252,13 @@ public class TaskDaoJdbc extends JdbcDaoSupport implements TaskDao {
         ", " + ExecServiceDaoJdbc.execServiceMappingSelectQuery+ ", " + ServicesManagerImpl.serviceMappingSelectQuery  + " from tasks left join exec_services on tasks.exec_service_id = exec_services.id " +
         "left join facilities on facilities.id = tasks.facility_id left join services on services.id = exec_services.service_id where tasks.engine_id = ?",
         new Integer[] { engineID }, TASK_ROWMAPPER);
+  }
+
+  @Override
+  public List<Pair<Task, Integer>> listAllTasksAndClients() {
+	  return this.getJdbcTemplate().query("select " + taskMappingSelectQuery + ", " + FacilitiesManagerImpl.facilityMappingSelectQuery +
+			  ", " + ExecServiceDaoJdbc.execServiceMappingSelectQuery+ ", " + ServicesManagerImpl.serviceMappingSelectQuery  + " from tasks left join exec_services on tasks.exec_service_id = exec_services.id " +
+			  "left join facilities on facilities.id = tasks.facility_id left join services on services.id = exec_services.service_id", TASK_CLIENT_ROWMAPPER);
   }
 
   @Override

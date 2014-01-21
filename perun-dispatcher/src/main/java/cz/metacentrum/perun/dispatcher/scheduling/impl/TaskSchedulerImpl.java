@@ -321,6 +321,7 @@ public class TaskSchedulerImpl implements TaskScheduler {
 		dispatcherQueue.sendMessage("[" + task.getId() + "][" + task.getExecServiceId() 
 				+ "][" + task.getFacility().serializeToString() 
 				+ "]|[" + destinations_s.toString() + "]|[" + dependencies + "]");
+		task.setStartTime(new Date(System.currentTimeMillis()));
 		schedulingPool.setTaskStatus(task,  TaskStatus.PROCESSING);
 	}
 

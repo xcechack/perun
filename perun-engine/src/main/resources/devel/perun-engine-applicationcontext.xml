@@ -14,8 +14,11 @@ http://www.springframework.org/schema/task http://www.springframework.org/schema
 "
 		default-lazy-init="true"
 >
+	<!-- we will rather do only component scan for service beans, we will (re)define DAOs later -->
+	<!-- 
     <import resource="classpath:perun-tasks-lib-applicationcontext.xml"/>
-    
+     -->
+     
     <!-- Enable @Transactional support -->
      <tx:annotation-driven transaction-manager="transactionManagerPerunEngine"/>
     
@@ -27,7 +30,8 @@ http://www.springframework.org/schema/task http://www.springframework.org/schema
 
     <!-- Scans for @Repository, @Service and @Component -->
     <context:component-scan base-package="cz.metacentrum.perun.engine"/>
-   
+   	<context:component-scan base-package="cz.metacentrum.perun.taskslib"/>
+   		
     <task:scheduler id="scheduler" pool-size="4" />
     
     <task:scheduled-tasks scheduler="scheduler">

@@ -11,8 +11,10 @@ http://www.springframework.org/schema/context http://www.springframework.org/sch
 http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
 http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
 http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
+http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
 ">
 
+	<!-- this one includes JDBC properties and dataSource bean -->
     <import resource="classpath:perun-datasources.xml"/>
 
      <!-- Transaction manager for Spring JDBC -->
@@ -20,11 +22,43 @@ http://www.springframework.org/schema/task http://www.springframework.org/schema
         <property name="dataSource" ref="dataSource"/>
     </bean>
     
+ 	<!-- DataSource implementation -->
+    <jdbc:embedded-database id="dataSourceLocal">
+        <jdbc:script location="classpath:schema.sql"/>
+    </jdbc:embedded-database>
+    
+     <!-- Transaction manager for Spring JDBC -->
+    <bean id="transactionManagerPerunEngineLocal" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSourceLocal" ref="dataSourceLocal"/>
+    </bean>
+ 
     <!-- DAOs -->
     <bean id="engineDao" class="cz.metacentrum.perun.engine.dao.jdbc.EngineDaoJdbc" init-method="initialize">
       <property name="dataSource" ref="dataSource"/> 
     </bean>
 
+	<!-- These DAOs come from taskslib -->
+	<!-- we (re)define them here to differentiate between our local and central database -->
+    <bean id="taskDao" class="cz.metacentrum.perun.taskslib.dao.jdbc.TaskDaoJdbc">
+      <property name="dataSource" ref="dataSource"/> 
+    </bean>
+    
+    <bean id="taskResult" class="cz.metacentrum.perun.taskslib.dao.jdbc.TaskResultDaoJdbc">
+      <property name="dataSource" ref="dataSource"/> 
+    </bean>  
+    
+    <bean id="execServiceDao" class="cz.metacentrum.perun.taskslib.dao.jdbc.ExecServiceDaoJdbc">
+      <property name="dataSource" ref="dataSource"/> 
+    </bean>
+    
+    <bean id="execServiceDenialDao" class="cz.metacentrum.perun.taskslib.dao.jdbc.ExecServiceDenialDaoJdbc">
+      <property name="dataSource" ref="dataSource"/> 
+    </bean>
+    
+    <bean id="execServiceDependencyDao" class="cz.metacentrum.perun.taskslib.dao.jdbc.ExecServiceDependencyDaoJdbc">
+      <property name="dataSource" ref="dataSource"/> 
+    </bean>
+	
     <!--    
     <bean id="processingRuleDao" class="cz.metacentrum.perun.engine.dao.jdbc.ProcessingRuleDaoJdbc">
       <property name="dataSource" ref="dataSource"/> 

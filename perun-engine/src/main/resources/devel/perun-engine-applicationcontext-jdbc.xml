@@ -5,6 +5,7 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:aop="http://www.springframework.org/schema/aop"
        xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
        xsi:schemaLocation="
 http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
@@ -40,9 +41,10 @@ http://www.springframework.org/schema/jdbc http://www.springframework.org/schema
 	<!-- These DAOs come from taskslib -->
 	<!-- we (re)define them here to differentiate between our local and central database -->
     <bean id="taskDao" class="cz.metacentrum.perun.taskslib.dao.jdbc.TaskDaoJdbc">
-      <property name="dataSource" ref="dataSource"/> 
+      <property name="dataSource" ref="dataSourceLocal"/> 
     </bean>
     
+	<!-- and where should these go? -->
     <bean id="taskResult" class="cz.metacentrum.perun.taskslib.dao.jdbc.TaskResultDaoJdbc">
       <property name="dataSource" ref="dataSource"/> 
     </bean>  

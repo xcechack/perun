@@ -88,7 +88,6 @@ create sequence TASKS_RESULTS_ID_SEQ start with 10 increment by 1;
 create sequence EXEC_SERVICES_ID_SEQ start with 20 increment by 1;
 create sequence FACILITIES_ID_SEQ;
 create sequence SERVICES_ID_SEQ;
-create sequence FACILITIES_ID_SEQ;
 
 create index idx_tasks_facility_id on tasks(facility_id);
 create index idx_tasks_exec_service_id on tasks(exec_service_id);

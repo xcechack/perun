@@ -57,7 +57,6 @@ alter table tasks add constraint TASK_PK primary key (id);
 alter table tasks add constraint TASK_STAT_CHK check (status in ('NONE','OPEN','PLANNED','PROCESSING','DONE','ERROR'));
 alter table tasks_results add constraint TASKS_RESULTS_PK primary key (id);
 alter table tasks_results add constraint TASKRES_TASK_FK foreign key (task_id) references tasks(id);
-alter table tasks_results add constraint TASKRES_DEST_FK foreign key (destination_id) references destinations(id);
 alter table tasks_results add constraint TASKRES_STAT_CHK check (status in ('DONE','ERROR','FATAL_ERROR','DENIED'));
 
  

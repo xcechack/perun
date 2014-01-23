@@ -30,7 +30,7 @@ http://www.springframework.org/schema/jdbc http://www.springframework.org/schema
     
      <!-- Transaction manager for Spring JDBC -->
     <bean id="transactionManagerPerunEngineLocal" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
-        <property name="dataSourceLocal" ref="dataSourceLocal"/>
+        <property name="dataSource" ref="dataSourceLocal"/>
     </bean>
  
     <!-- DAOs -->

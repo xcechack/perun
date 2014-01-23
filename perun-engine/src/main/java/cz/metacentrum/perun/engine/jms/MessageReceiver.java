@@ -90,7 +90,7 @@ public class MessageReceiver implements Runnable {
                         String messageType = message.split("\\|", 2)[0].trim();
                         log.debug("RECEIVED MESSAGE:" + message + ", Type:" + messageType);
 
-                        if (messageType.equalsIgnoreCase("event")) {
+                        if (messageType.equalsIgnoreCase("task")) {
                             try {
                                 taskExecutorMessageProcess.execute(new Runnable() {
                                     @Override

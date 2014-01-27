@@ -101,7 +101,7 @@ public class EngineManagerImpl implements EngineManager {
     @Override
     public void loadSchedulingPool() {
         log.info("I am going to load ExecService:Facility pairs from db");
-        schedulingPool.reloadTasks();
+        schedulingPool.reloadTasks(Integer.parseInt(propertiesBean.getProperty("engine.unique.id")));
 /*
         try {
             BufferedReader input = new BufferedReader(new FileReader("SchedulingPool.txt"));
@@ -127,7 +127,7 @@ public class EngineManagerImpl implements EngineManager {
             log.error(e.toString());
         }
   */
-        log.info("Loading ExecService:Facility pairs from db has completed.");
+        log.info("Loading ExecService:Facility pairs from db has completed. Pool contains " + schedulingPool.getSize() + " tasks.");
     }
 
     @Override
@@ -158,13 +158,16 @@ public class EngineManagerImpl implements EngineManager {
             ExecService execService = task.getExecService();
 
             if(execService.getExecServiceType().equals(ExecServiceType.GENERATE)) {
-                schedulingPool.setTaskStatus(task, TaskStatus.ERROR);
+            	log.debug("Setting task " + task.toString() + " to ERROR");
+            	schedulingPool.setTaskStatus(task, TaskStatus.ERROR);
             }
         }
         for(Task task : schedulingPool.getProcessingTasks()) {
+        	log.debug("Setting task " + task.toString() + " to ERROR");
         	schedulingPool.setTaskStatus(task, TaskStatus.ERROR);
         }
         for(Task task : schedulingPool.getPlannedTasks()) {
+        	log.debug("Setting task " + task.toString() + " to ERROR");
         	schedulingPool.setTaskStatus(task, TaskStatus.ERROR);
         }
         log.info("I'm done with it.");

@@ -204,9 +204,9 @@ public class SchedulingPoolImpl implements SchedulingPool {
     }
 
 	@Override
-	public void reloadTasks() {
+	public void reloadTasks(int engineID) {
 		this.clearPool();
-		for(Task task : taskManager.listAllTasks(0)) {
+		for(Task task : taskManager.listAllTasks(engineID)) {
     		TaskStatus status = task.getStatus();
     		if(status == null) {
     			task.setStatus(TaskStatus.NONE);

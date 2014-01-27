@@ -82,6 +82,6 @@ public interface SchedulingPool {
 
 	void removeTask(Task task);
 	
-	void reloadTasks();
+	void reloadTasks(int engineID);
 
 }

@@ -230,12 +230,10 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
     }
 
     public int getEngineId() {
-/*        if (engineId == -1) {
+    	if (engineId == -1) {
             this.engineId = Integer.parseInt(propertiesBean.getProperty("engine.unique.id"));
         }
         return engineId;
- */
-    	return 0;
     }
 
 	public TaskResultListener getResultListener() {

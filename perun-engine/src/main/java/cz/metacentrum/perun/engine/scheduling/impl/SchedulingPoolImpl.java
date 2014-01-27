@@ -54,6 +54,11 @@ public class SchedulingPoolImpl implements SchedulingPool {
     @Override
 	public int addToPool(Task task) {
     	synchronized(pool) {
+    		if(taskIdMap.containsKey(task.getId())) {
+    			log.warn("Task already is in the pool " + task.toString());
+    			return this.getSize();
+    		}
+    		taskIdMap.put(task.getId(), task);
     		TaskStatus status = task.getStatus();
     		if(status == null) {
     			task.setStatus(TaskStatus.NONE);
@@ -63,9 +68,8 @@ public class SchedulingPoolImpl implements SchedulingPool {
     		}
     	}
     	// XXX should this be synchronized too?
-    	taskIdMap.put(task.getId(), task);
+		task.setSchedule(new Date(System.currentTimeMillis()));
     	try {
-    		task.setSchedule(new Date(System.currentTimeMillis()));
 			taskManager.insertTask(task, 0);
 			log.debug("adding task " + task.toString() + " to database");
 		} catch (InternalErrorException e) {

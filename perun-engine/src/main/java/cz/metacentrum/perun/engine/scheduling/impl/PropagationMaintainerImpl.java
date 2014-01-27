@@ -434,8 +434,7 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     			log.debug("TASK reported as finished at " + System.currentTimeMillis());
     			jmsQueueManager.reportFinishedTask(task, "");
 			} catch (JMSException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.error("Failed to report finished task " + task.toString() + ": " + e.getMessage());
 			}
     	}
     	for(Task task : schedulingPool.getErrorTasks()) {
@@ -449,17 +448,19 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     		failedDestinations.removeAll(destinations);
     		
     		StringBuilder destinations_s = new StringBuilder();
-    		destinations_s.append(failedDestinations.remove(0).getDestination());
-    		for(Destination destination : failedDestinations) {
-    			destinations_s.append(",");
-    			destinations_s.append(destination);
+    		if(!failedDestinations.isEmpty()) {
+    			destinations_s.append(failedDestinations.remove(0).getDestination());
+    			for(Destination destination : failedDestinations) {
+    				destinations_s.append(",");
+    				destinations_s.append(destination);
+    			
+    			}
     		}
     		log.debug("TASK " + task.toString() + " finished in error, remaining destinations: " + destinations_s);
     		try {
 				jmsQueueManager.reportFinishedTask(task, destinations_s.toString());
 			} catch (JMSException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.error("Failed to report finished task " + task.toString() + ": " + e.getMessage());
 			}
     	}
     }

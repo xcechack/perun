@@ -79,9 +79,9 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
                 // There is no point in writing into TaskResults. We switch TASK status at once.
                 // TODO: Put some logic in here :-)
 
-                task.setStatus(returnCode == 0 ? TaskStatus.DONE : TaskStatus.ERROR);
+                //task.setStatus(returnCode == 0 ? TaskStatus.DONE : TaskStatus.ERROR);
                 task.setEndTime(new Date(System.currentTimeMillis()));
-                if(task.getStatus().equals(TaskStatus.ERROR)) {
+                if(returnCode != 0) {
                   log.info("GEN task failed. Ret code " + returnCode + ". STDOUT: {}  STDERR: {}. Task: " + task, stdout, stderr);
                   resultListener.onTaskDestinationError(task, destination, null);
                 } else {
@@ -90,16 +90,16 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
 
             } catch (IOException e) {
                 log.error(e.toString(), e);
-                task.setStatus(TaskStatus.ERROR);
+                //task.setStatus(TaskStatus.ERROR);
                 task.setEndTime(new Date(System.currentTimeMillis()));
             } catch (Exception e) {
                 log.error(e.toString(), e);
-                task.setStatus(TaskStatus.ERROR);
+                //task.setStatus(TaskStatus.ERROR);
                 task.setEndTime(new Date(System.currentTimeMillis()));
             } finally {
                   String ret = returnCode == -1 ? "unknown" : String.valueOf(returnCode);
                   log.debug("GEN task ended. Ret code " + ret + ". STDOUT: {}  STDERR: {}. Task: " + task, stdout, stderr);
-                  taskManager.updateTask(task, getEngineId());
+                  //taskManager.updateTask(task, getEngineId());
             }
         } else if (execService.getExecServiceType().equals(ExecServiceType.SEND)) {
 

@@ -11,11 +11,14 @@ import org.slf4j.LoggerFactory;
 import cz.metacentrum.perun.core.api.Destination;
 import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
 import cz.metacentrum.perun.engine.scheduling.TaskStatus;
+import cz.metacentrum.perun.taskslib.model.ExecService.ExecServiceType;
 import cz.metacentrum.perun.taskslib.model.Task;
 import cz.metacentrum.perun.taskslib.model.TaskResult;
 
 public class TaskStatusImpl implements TaskStatus {
     private final static Logger log = LoggerFactory.getLogger(TaskStatusImpl.class);
+
+    private final static Destination fakeGenDestination = new Destination(0, "gen", "ONE");
 
     private Map<Destination, TaskDestinationStatus> allDestinations;
     private Map<Destination, TaskDestinationStatus> oneOfAllDestinations;
@@ -28,18 +31,34 @@ public class TaskStatusImpl implements TaskStatus {
     
 	public TaskStatusImpl(Task task) {
 		this.task = task;
-		allDestinations = new ConcurrentHashMap<Destination, TaskDestinationStatus>(task.getDestinations().size());
-		oneOfAllDestinations = new ConcurrentHashMap<Destination, TaskDestinationStatus>(task.getDestinations().size());
-		destinationResults = new ConcurrentHashMap<Integer, TaskResult>(task.getDestinations().size());
-		oneOfAllSuccess = false;
-		allProcessing = false;
-		countAllDone = 0;
-		countAllError = 0;
-		for(Destination destination : task.getDestinations()) {
-			if(destination.getType().equals("PARALLEL")) {
-				allDestinations.put(destination, TaskDestinationStatus.WAITING);
-			} else {
-				oneOfAllDestinations.put(destination, TaskDestinationStatus.WAITING);
+		if(task.getExecService().getExecServiceType().equals(ExecServiceType.GENERATE)) {
+			// one fake destination for the GEN task
+			// if this one succeeds, the task succeeds
+			allDestinations = new ConcurrentHashMap<Destination, TaskDestinationStatus>();
+			oneOfAllDestinations = new ConcurrentHashMap<Destination, TaskDestinationStatus>(1);
+			destinationResults = new ConcurrentHashMap<Integer, TaskResult>(1);
+			oneOfAllSuccess = false;
+			allProcessing = false;
+			countAllDone = 0;
+			countAllError = 0;
+			oneOfAllDestinations.put(fakeGenDestination, TaskDestinationStatus.WAITING);
+		} else {
+			allDestinations = new ConcurrentHashMap<Destination, TaskDestinationStatus>(task.getDestinations().size());
+			oneOfAllDestinations = new ConcurrentHashMap<Destination, TaskDestinationStatus>(task.getDestinations().size());
+			destinationResults = new ConcurrentHashMap<Integer, TaskResult>(task.getDestinations().size());
+			oneOfAllSuccess = false;
+			allProcessing = false;
+			countAllDone = 0;
+			countAllError = 0;
+			for(Destination destination : task.getDestinations()) {
+				if(destination.getType().equals("PARALLEL")) {
+					allDestinations.put(destination, TaskDestinationStatus.WAITING);
+				} else {
+					oneOfAllDestinations.put(destination, TaskDestinationStatus.WAITING);
+				}
+			}
+			if(oneOfAllDestinations.isEmpty()) {
+				oneOfAllSuccess = true;
 			}
 		}
 	}
@@ -124,8 +143,8 @@ public class TaskStatusImpl implements TaskStatus {
 	}
 
 	@Override
-	public void setResult(TaskResult result) {
-		destinationResults.put(task.getId(), result);
+	public void setDestinationResult(Destination destination, TaskResult result) {
+		destinationResults.put(destination.getId(), result);
 		// TODO: cross check destination status
 		// TaskResult.DENIED counts as TaskDestinationStatus.DONE
 		// XXX - but where it may come from?
@@ -143,7 +162,7 @@ public class TaskStatusImpl implements TaskStatus {
 		}
 		if(oneOfAllSuccess && countAllDone == allDestinations.size()) {
 			return cz.metacentrum.perun.taskslib.model.Task.TaskStatus.DONE;
-		}
+		} 
 		// this involves the weird case of countAllDone + countAllError > allDestinations.size()
 		return cz.metacentrum.perun.taskslib.model.Task.TaskStatus.ERROR;
 	}

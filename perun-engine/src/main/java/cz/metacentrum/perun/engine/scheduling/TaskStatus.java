@@ -24,7 +24,7 @@ public interface TaskStatus {
 	
 	void setDestinationStatus(Destination destination, TaskDestinationStatus status) throws InternalErrorException;
 
-	void setResult(TaskResult result);
+	void setDestinationResult(Destination destination, TaskResult result);
 
 	boolean isTaskFinished();
 

@@ -57,9 +57,7 @@ public class TaskStatusManagerImpl implements TaskStatusManager, TaskResultListe
 		TaskStatus taskStatus = this.getTaskStatus(task);
 		try {
 			taskStatus.setDestinationStatus(destination, TaskDestinationStatus.DONE);
-			if(result != null) {
-				taskStatus.setResult(result);
-			}
+			taskStatus.setDestinationResult(destination, result);
 		} catch (InternalErrorException e) {
 			log.error("Error setting DONE status for task " + task.toString());
 		}
@@ -74,9 +72,7 @@ public class TaskStatusManagerImpl implements TaskStatusManager, TaskResultListe
 		TaskStatus taskStatus = this.getTaskStatus(task);
 		try {
 			taskStatus.setDestinationStatus(destination, TaskDestinationStatus.ERROR);
-			if(result != null) {
-				taskStatus.setResult(result);
-			}
+			taskStatus.setDestinationResult(destination, result);
 		} catch (InternalErrorException e) {
 			log.error("Error setting ERROR status for task " + task.toString());
 		}

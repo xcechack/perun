@@ -146,6 +146,7 @@ public class JMSQueueManager {
 		TextMessage message = session.createTextMessage("task:" + propertiesBean.getProperty("engine.unique.id") 
 				+ ":" + task.getId() + ":" + task.getStatus().toString() + ":" + destinations);
 		producer.send(message);
+        log.debug("Task result message [" + message.getText() + "] has been sent...");
 	}
 
 	public void sendGoodByeAndClose() {

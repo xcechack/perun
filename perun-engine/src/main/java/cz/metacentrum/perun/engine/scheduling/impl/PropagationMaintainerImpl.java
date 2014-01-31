@@ -594,7 +594,8 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     	suspiciousTasks.addAll(schedulingPool.getPlannedTasks());
     	
     	for(Task task: suspiciousTasks) {
-            //count how many minutes the task stays in one state - if the state is PLANNED count it from when it was scheduled ; if it is PROCESSING count it from when it started
+    		log.debug("checking task " + task.toString() + "for staying around too long...");
+    		//count how many minutes the task stays in one state - if the state is PLANNED count it from when it was scheduled ; if it is PROCESSING count it from when it started
             int howManyMinutesAgo = (int) (System.currentTimeMillis() - ( task.getStatus().equals(TaskStatus.PLANNED) ? task.getSchedule() : task.getStartTime() ).getTime()) / 1000 / 60;
 
             //If too much time has passed something is broken

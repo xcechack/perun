@@ -156,7 +156,7 @@ public class TaskSchedulerImpl implements TaskScheduler {
         			if (dependencyServiceTask == null) {
         				//Dependency being NULL is equivalent to being in NONE state.
         				log.info("   Last Task [dependency:" + dependency.getId() + ", facility:" + facility.getId() + "] was NULL, we are gonna propagate.");
-        				scheduleItAndWait(dependency, facility, execService, dispatcherQueue);
+        				scheduleItAndWait(dependency, facility, execService, dispatcherQueue, time);
         				proceed = false;
         			} else {
         				switch (dependencyServiceTask.getStatus()) {
@@ -254,11 +254,12 @@ public class TaskSchedulerImpl implements TaskScheduler {
 	}
 
 	private void scheduleItAndWait(ExecService dependency, Facility facility,
-			ExecService execService, DispatcherQueue dispatcherQueue) {
+			ExecService execService, DispatcherQueue dispatcherQueue, Date time) {
 		// this is called to schedule dependencies of given task
 		Task task = new Task();
 		task.setExecService(dependency);
 		task.setFacility(facility);
+		task.setSchedule(time);
 		schedulingPool.addToPool(task, dispatcherQueue);
 		scheduleTask(task);
 		//schedulingPool.setTaskStatus(task, TaskStatus.NONE);

@@ -69,6 +69,8 @@ public class TaskSchedulerImpl implements TaskScheduler {
 		Facility facility = task.getFacility();
 		Date time = new Date(System.currentTimeMillis());
 		DispatcherQueue dispatcherQueue;
+
+		log.debug("Scheduling TASK " + task.toString());
 		try {
 			dispatcherQueue = schedulingPool.getQueueForTask(task);
 		} catch (InternalErrorException e) {

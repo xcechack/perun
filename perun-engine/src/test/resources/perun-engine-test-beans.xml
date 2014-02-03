@@ -60,6 +60,15 @@ http://www.springframework.org/schema/jdbc http://www.springframework.org/schema
 	    <property name="service" ref="service1" />
 	</bean>
 
+	<bean id="execservice_gen" class="cz.metacentrum.perun.taskslib.model.ExecService">
+		<property name="id" value="3" />
+	    <property name="defaultDelay" value="1" />
+	    <property name="script" value="/bin/true" />
+	    <property name="enabled" value="true" />
+	    <property name="execServiceType" value="GENERATE" />
+	    <property name="service" ref="service1" />
+	</bean>
+
 	<bean id="facility1" class="cz.metacentrum.perun.core.api.Facility">
 	    <constructor-arg name="id" value="0" />
 	    <constructor-arg name="name" value="testFacility" />
@@ -94,4 +103,19 @@ http://www.springframework.org/schema/jdbc http://www.springframework.org/schema
 		</property>	
 	</bean>
 
+	<bean id="task_gen" class="cz.metacentrum.perun.taskslib.model.Task">
+		<property name="id" value="3" />
+		<property name="execService" ref="execservice_gen" />
+		<property name="facility" ref="facility1" />
+		<property name="destinations">
+			<list>
+				<ref bean="destination1" />
+				<ref bean="destination2" />
+				<ref bean="destination3" />
+				<ref bean="destination4" />
+			</list>
+		</property>	
+
+	</bean>
+	
 </beans>

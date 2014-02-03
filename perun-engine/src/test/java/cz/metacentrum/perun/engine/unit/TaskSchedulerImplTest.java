@@ -27,6 +27,7 @@ public class TaskSchedulerImplTest extends TestBase {
     @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
 	@Test
 	public void processPoolTest() throws InternalErrorException {
+    	task1.setStatus(TaskStatus.NONE);
     	schedulingPool.addToPool(task1);
 		taskScheduler.processPool();
 		List<Task> tasks = schedulingPool.getPlannedTasks();

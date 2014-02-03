@@ -10,6 +10,9 @@ values (1, 1, 10, '1', 3, '/bin/true', 'SEND');
 insert into exec_services (id, service_id, default_delay, enabled, default_recurrence, script, type)
 values (2, 1, 10, '1', 3, '/bin/true', 'SEND');
 
+insert into exec_services (id, service_id, default_delay, enabled, default_recurrence, script, type)
+values (3, 1, 10, '1', 3, '/bin/true', 'GENERATE');
+
 insert into facilities (id, name, type)
 values (0, 'testFacility', 'host');
 

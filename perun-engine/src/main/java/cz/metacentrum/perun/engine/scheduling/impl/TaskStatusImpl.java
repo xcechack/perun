@@ -144,7 +144,9 @@ public class TaskStatusImpl implements TaskStatus {
 
 	@Override
 	public void setDestinationResult(Destination destination, TaskResult result) {
-		destinationResults.put(destination.getId(), result);
+		if(result != null) {
+			destinationResults.put(destination.getId(), result);
+		}
 		// TODO: cross check destination status
 		// TaskResult.DENIED counts as TaskDestinationStatus.DONE
 		// XXX - but where it may come from?

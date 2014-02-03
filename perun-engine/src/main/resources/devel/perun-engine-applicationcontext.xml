@@ -109,5 +109,12 @@ http://www.springframework.org/schema/task http://www.springframework.org/schema
         <property name="ignoreResourceNotFound">
             <value>true</value>
         </property>
+        <property name="properties">
+        	<props>
+        		<prop key="engine.unique.id">1</prop>
+        		<prop key="engine.ip.address">127.0.0.1</prop>
+        		<prop key="engine.port">6061</prop>
+        	</props>
+        </property>
     </bean>
 </beans>

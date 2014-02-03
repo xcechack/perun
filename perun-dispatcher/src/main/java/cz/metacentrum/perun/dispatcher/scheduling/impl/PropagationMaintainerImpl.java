@@ -382,6 +382,7 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
             }
             completedTask.setDestinations(destinationList);
 			schedulingPool.setTaskStatus(completedTask, TaskStatus.ERROR);
+			log.debug("Task set to ERROR state with remaining destinations: " + destinationList);
 		}
 	}
 

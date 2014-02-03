@@ -39,11 +39,12 @@ public class ExecutorEngineWorkerImplTest extends TestBase implements TaskResult
 	@IfProfileValue(name="perun.test.groups", values=("unit-tests"))
 	@Test
 	public void runTest() throws InternalErrorException {
-    	ExecutorEngineWorker worker = (ExecutorEngineWorker) beanFactory.getBean("executorEngineWorker");
+		ExecutorEngineWorker worker = (ExecutorEngineWorker) beanFactory.getBean("executorEngineWorker");
 		log.debug("task " + task1.toString());
 		schedulingPool.addToPool(task1);
-		Task task = taskManager.getTaskById(1, 0);
-    	log.debug("task in db " + ((task == null) ? "null" : task.toString()));
+		for(Task task : taskManager.listAllTasks(0)) {
+				log.debug("task in db " + ((task == null) ? "null" : task.toString()));
+		}
     	worker.setTask(task1);
 		worker.setExecService(task1.getExecService());
 		worker.setFacility(task1.getFacility());

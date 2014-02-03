@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -43,6 +44,12 @@ public class SchedulingPoolTest extends TestBase {
     	task1.setStatus(TaskStatus.NONE);
     	task2.setStatus(TaskStatus.NONE);
     	schedulingPool.addToPool(task1);
+    }
+    
+    @After
+    public void cleanup() {
+    	schedulingPool.removeTask(task1);
+    	schedulingPool.removeTask(task2);
     }
     
     @IfProfileValue(name="perun.test.groups", values=("unit-tests"))

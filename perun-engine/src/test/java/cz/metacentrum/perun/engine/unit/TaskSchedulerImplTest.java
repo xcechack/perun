@@ -2,6 +2,7 @@ package cz.metacentrum.perun.engine.unit;
 
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.IfProfileValue;
@@ -26,7 +27,7 @@ public class TaskSchedulerImplTest extends TestBase {
     @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
 	@Test
 	public void processPoolTest() throws InternalErrorException {
-		schedulingPool.addToPool(task1);
+    	schedulingPool.addToPool(task1);
 		taskScheduler.processPool();
 		List<Task> tasks = schedulingPool.getPlannedTasks();
 		Assert.isTrue(tasks.size() == 1, "size is 1");
@@ -34,4 +35,9 @@ public class TaskSchedulerImplTest extends TestBase {
 		Assert.isTrue(task1.getStatus().equals(TaskStatus.PLANNED), "task1 status is planned");
 	}
 	
+    @After
+    public void cleanup() {
+    	schedulingPool.removeTask(task1);
+    }
+    
 }

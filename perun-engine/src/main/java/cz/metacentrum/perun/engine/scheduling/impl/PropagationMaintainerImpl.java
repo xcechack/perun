@@ -446,16 +446,17 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     		List<Destination> destinations = taskStatusManager.getTaskStatus(task).getSuccessfulDestinations();
     		List<Destination> failedDestinations = task.getDestinations();
     		failedDestinations.removeAll(destinations);
-    		
-    		StringBuilder destinations_s = new StringBuilder();
+
+    		StringBuilder destinations_s = new StringBuilder("Destinations [");
     		if(!failedDestinations.isEmpty()) {
-    			destinations_s.append(failedDestinations.remove(0).getDestination());
+    			destinations_s.append(failedDestinations.remove(0).serializeToString());
     			for(Destination destination : failedDestinations) {
     				destinations_s.append(",");
-    				destinations_s.append(destination);
-    			
+    				destinations_s.append(destination.serializeToString());
     			}
     		}
+    		destinations_s.append("]");
+
     		log.debug("TASK " + task.toString() + " finished in error, remaining destinations: " + destinations_s);
     		try {
 				jmsQueueManager.reportFinishedTask(task, destinations_s.toString());

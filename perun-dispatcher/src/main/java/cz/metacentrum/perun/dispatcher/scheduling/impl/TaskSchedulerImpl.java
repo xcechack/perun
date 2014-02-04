@@ -70,6 +70,11 @@ public class TaskSchedulerImpl implements TaskScheduler {
 		Date time = new Date(System.currentTimeMillis());
 		DispatcherQueue dispatcherQueue;
 
+		if(task.getStatus().equals(TaskStatus.PROCESSING)) {
+			log.debug("Task {} already processing, will not schedule again.", task.toString());
+			return;
+		}
+		
 		log.debug("Scheduling TASK " + task.toString());
 		try {
 			dispatcherQueue = schedulingPool.getQueueForTask(task);

@@ -297,12 +297,13 @@ public class TaskSchedulerImpl implements TaskScheduler {
 		// task|[engine_id]|[task_id][exec_service_id][facility]|[destination_list]|[dependency_list]
 		//   - the task|[engine_id] part is added by dispatcherQueue
         List<Destination> destinations = task.getDestinations();
-        if(destinations == null) {
+        if(destinations == null || destinations.isEmpty()) {
         	log.debug("No destinations for task " + task.toString() + ", trying to query the database...");
         	try {
         		destinations = perun.getServicesManager().getDestinations(perunSession, task.getExecService().getService(), task.getFacility());
         	} catch (ServiceNotExistsException e) {
         		log.error("No destinations found for task " + task.toString());
+        		// TODO: remove the task?
         	} catch (FacilityNotExistsException e) {
         		log.error("Facility for task does not exist..." + task.toString());
         		// TODO: remove the task?

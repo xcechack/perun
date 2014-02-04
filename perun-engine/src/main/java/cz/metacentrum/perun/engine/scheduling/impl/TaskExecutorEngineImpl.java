@@ -65,7 +65,7 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
     	Date now = new Date(System.currentTimeMillis());
     	for(Task task : schedulingPool.getPlannedTasks()) {
     		log.debug("TASK " + task.toString() + " is to be run at " + task.getSchedule() + ", now is " + now);
-    		if(true || task.getSchedule().after(now)) {
+    		if(task.getSchedule().after(now)) {
         		log.debug("TASK " + task.toString() + " is going to run");
     			runTask(task);
     		}

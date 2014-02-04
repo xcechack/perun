@@ -389,7 +389,7 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
 		} else {
 			if(string.isEmpty()) {
 				// weird - task is in error and no destinations reported as failed...
-				log.warn("TASK {} ended in ERROR state with no remaining destinations.", task.toString());
+				log.warn("TASK {} ended in ERROR state with no remaining destinations.", completedTask.toString());
 			} else {
 				// task failed, some destinations remain
 				// resolve list of destinations 

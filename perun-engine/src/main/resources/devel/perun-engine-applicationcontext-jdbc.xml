@@ -24,9 +24,23 @@ http://www.springframework.org/schema/jdbc http://www.springframework.org/schema
     </bean>
     
  	<!-- DataSource implementation -->
-    <jdbc:embedded-database id="dataSourceLocal">
+ 	<bean class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close" id="dataSourceLocal">
+	    <property name="driverClassName" value="org.hsqldb.jdbcDriver" />
+    	<property name="url" value="jdbc:hsqldb:file:db/tasks" />
+    	<property name="username" value="sa" />
+    	<property name="password" value="" />
+	</bean>
+
+
+	<jdbc:initialize-database data-source="dataSourceLocal">
+    	<jdbc:script location="classpath:schema.sql" />
+ 	</jdbc:initialize-database>   
+ 	
+ 	<!-- 
+ 	<jdbc:embedded-database id="dataSourceLocal">
         <jdbc:script location="classpath:schema.sql"/>
     </jdbc:embedded-database>
+    -->
     
      <!-- Transaction manager for Spring JDBC -->
     <bean id="transactionManagerPerunEngineLocal" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">

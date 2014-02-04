@@ -365,31 +365,49 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
 	}
 
 	@Override
-	public void onTaskComplete(int taskId, int clientID, String string) {
+	public void onTaskComplete(int taskId, int clientID, String status_s, String string) {
 		Task completedTask = schedulingPool.getTaskById(taskId);
 		
+		if(completedTask == null) {
+			// eh? how would that be possible?
+			log.error("TASK id {} reported as complete, but we do not know it... (yet?)", taskId);
+			return;
+		}
+		
+		TaskStatus status = TaskStatus.NONE;
+		if(status_s.equals("ERROR")) {
+			status = TaskStatus.ERROR;
+		} else if(status_s.equals("DONE")) {
+			status = TaskStatus.DONE;
+		}
+
 		completedTask.setEndTime(new Date(System.currentTimeMillis()));
 
-		if(string.isEmpty()) {
+		if(status.equals(TaskStatus.DONE)) {
 			// task completed successfully
 			schedulingPool.setTaskStatus(completedTask, TaskStatus.DONE);
 		} else {
-			// task failed, some destinations remain
-            // resolve list of destinations 
-            List<PerunBean> listOfBeans;
-			List<Destination> destinationList = new ArrayList<Destination>();
-			try {
-				listOfBeans = AuditParser.parseLog(string);
-				log.debug("Found list of destination beans: " + listOfBeans);
-            	for(PerunBean bean : listOfBeans) {
-            		destinationList.add((Destination)bean);
-            	}
-            } catch (InternalErrorException e) {
-            	log.error("Could not resolve destination from destination list");
-            }
-            completedTask.setDestinations(destinationList);
+			if(string.isEmpty()) {
+				// weird - task is in error and no destinations reported as failed...
+				log.warn("TASK {} ended in ERROR state with no remaining destinations.", task.toString());
+			} else {
+				// task failed, some destinations remain
+				// resolve list of destinations 
+				List<PerunBean> listOfBeans;
+				List<Destination> destinationList = new ArrayList<Destination>();
+				try {
+					listOfBeans = AuditParser.parseLog(string);
+					log.debug("Found list of destination beans: " + listOfBeans);
+					for(PerunBean bean : listOfBeans) {
+						destinationList.add((Destination)bean);
+					}
+				} catch (InternalErrorException e) {
+					log.error("Could not resolve destination from destination list");
+				}
+				completedTask.setDestinations(destinationList);
+			}
 			schedulingPool.setTaskStatus(completedTask, TaskStatus.ERROR);
-			log.debug("Task set to ERROR state with remaining destinations: " + destinationList);
+			log.debug("Task set to ERROR state with remaining destinations: " + completedTask.getDestinations());
 		}
 	}
 

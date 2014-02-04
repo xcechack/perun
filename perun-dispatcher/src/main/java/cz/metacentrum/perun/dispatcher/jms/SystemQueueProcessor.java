@@ -149,9 +149,10 @@ public class SystemQueueProcessor {
 			// DB.
 			
 			// Task status message
-			// task:x:y:dest
+			// task:x:y:status:dest
 			// where x is an Integer that represents Engine's ID in the Perun
 			//       y is an Integer that represents task ID
+			//		 status is string representation of task status
 			//       dest is an comma separated list of successfully updated destinations
 			//            (empty for DONE tasks)
 
@@ -183,7 +184,7 @@ public class SystemQueueProcessor {
 				propagationMaintainer.closeTasksForEngine(clientID);
 			} else if(clientIDsplitter[0].equalsIgnoreCase("task")) {
 				// task complete...
-				propagationMaintainer.onTaskComplete(Integer.parseInt(clientIDsplitter[2]), clientID, clientIDsplitter[3]);
+				propagationMaintainer.onTaskComplete(Integer.parseInt(clientIDsplitter[2]), clientID, clientIDSplitter[3], clientIDsplitter[4]);
 			} else {
 				throw new MessageFormatException("Client (Perun-Engine) sent a malformed message [" + systemMessagetext + "]");
 			}

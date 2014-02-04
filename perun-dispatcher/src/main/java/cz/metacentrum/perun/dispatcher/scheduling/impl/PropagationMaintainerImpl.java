@@ -114,14 +114,15 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
             }
             int howManyMinutesAgo = (int) (System.currentTimeMillis() - task.getEndTime().getTime()) / 1000 / 60;
             log.info("TASK [" + task + "] in ERROR state completed " + howManyMinutesAgo + " minutes ago.");
+            // XXX - apparently this is not what the authors had in mind, commented out
             // check and set recurrence
-            int recurrence = task.getRecurrence() - 1;
-            if(recurrence < 0) {
-            	// no more retries, sorry
-            	log.info("TASK [ " + task + "] in ERROR state has no more retries, bailing out.");
-            	continue;
-            }
-            task.setRecurrence(recurrence);
+            //int recurrence = task.getRecurrence() - 1;
+            //if(recurrence < 0) {
+            //// no more retries, sorry
+            //log.info("TASK [ " + task + "] in ERROR state has no more retries, bailing out.");
+            //continue;
+            //}
+            //task.setRecurrence(recurrence);
             //If DELAY time has passed, we reschedule...
             if (howManyMinutesAgo >= task.getDelay()) {
                 //check if service is still assigned on facility

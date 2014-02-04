@@ -184,7 +184,7 @@ public class SystemQueueProcessor {
 				propagationMaintainer.closeTasksForEngine(clientID);
 			} else if(clientIDsplitter[0].equalsIgnoreCase("task")) {
 				// task complete...
-				propagationMaintainer.onTaskComplete(Integer.parseInt(clientIDsplitter[2]), clientID, clientIDSplitter[3], clientIDsplitter[4]);
+				propagationMaintainer.onTaskComplete(Integer.parseInt(clientIDsplitter[2]), clientID, clientIDsplitter[3], clientIDsplitter[4]);
 			} else {
 				throw new MessageFormatException("Client (Perun-Engine) sent a malformed message [" + systemMessagetext + "]");
 			}

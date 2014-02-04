@@ -98,6 +98,7 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     
     private void checkFinishedTasks() {
     	for(Task task : schedulingPool.getDoneTasks()) {
+    		log.debug("Task " + task.toString() + " is done.");
     	}
     }
     
@@ -152,6 +153,8 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
 	                        }	
 	                  } else {
 	                      //delete this tasks (SEND and GEN) because service is no longer assigned to facility
+	                	  schedulingPool.removeTask(task);
+	                	  log.warn("Removed TASK {} from database, beacuse service is no longer assigned to this facility.", task.toString());
 	                  }
 				} catch (FacilityNotExistsException e) {
 	                  log.error("Consistency error - found task for non-existing facility. {}", e);
@@ -289,7 +292,10 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
 
     	for(Task task : schedulingPool.getDoneTasks()) {
             //skip GEN tasks
-            if(task.getExecService().getExecServiceType().equals(ExecService.ExecServiceType.GENERATE)) continue;
+            if(task.getExecService().getExecServiceType().equals(ExecService.ExecServiceType.GENERATE)) {
+            	log.debug("Found finished GEN TASK {} that was not running for a while, leaving it as is.", task.toString());
+            	continue;
+            }
             
             Date twoDaysAgo = new Date(System.currentTimeMillis() - 1000 * 60 * 24 * 2);
             if(task.getEndTime().before(twoDaysAgo)) {

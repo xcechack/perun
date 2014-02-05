@@ -156,7 +156,7 @@ public class SystemQueueProcessor {
 			//       dest is an comma separated list of successfully updated destinations
 			//            (empty for DONE tasks)
 
-			String[] clientIDsplitter = systemMessagetext.split(":");
+			String[] clientIDsplitter = systemMessagetext.split(":", 5);
 			int clientID = 0;
 			try {
 				clientID = Integer.parseInt(clientIDsplitter[1]);

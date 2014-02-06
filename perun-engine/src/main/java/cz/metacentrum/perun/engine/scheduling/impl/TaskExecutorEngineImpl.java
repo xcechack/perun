@@ -154,8 +154,7 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
 					}	
 				}
 			} catch (InternalErrorException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.error("Error getting dependency status for task {}", task.toString());
 			}
         	if(proceed) {
         		try {

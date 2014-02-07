@@ -160,8 +160,7 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
         		try {
 					taskStatusManager.getTaskStatus(task).setDestinationStatus(destination, TaskDestinationStatus.PROCESSING);
 				} catch (InternalErrorException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					log.error("Error setting status for destination {} of task {}", destination, task.toString());
 				}
         		startWorker(task, destination);
         	}

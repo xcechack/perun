@@ -433,6 +433,8 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     		try {
     			log.debug("TASK reported as finished at " + System.currentTimeMillis());
     			jmsQueueManager.reportFinishedTask(task, "");
+    			schedulingPool.removeTask(task);
+    			log.debug("TASK {} removed from database.", task.getId());
 			} catch (JMSException e) {
 				log.error("Failed to report finished task " + task.toString() + ": " + e.getMessage());
 			}
@@ -459,7 +461,7 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
 
     		log.debug("TASK " + task.toString() + " finished in error, remaining destinations: " + destinations_s);
     		try {
-				jmsQueueManager.reportFinishedTask(task, destinations_s.toString());
+    			jmsQueueManager.reportFinishedTask(task, destinations_s.toString());
 			} catch (JMSException e) {
 				log.error("Failed to report finished task " + task.toString() + ": " + e.getMessage());
 			}
@@ -484,6 +486,7 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
             if(recurrence < 0) {
             	// no more retries, sorry
             	log.info("TASK [ " + task + "] in ERROR state has no more retries, bailing out.");
+            	schedulingPool.removeTask(task);
             	continue;
             }
             task.setRecurrence(recurrence);

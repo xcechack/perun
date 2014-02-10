@@ -386,6 +386,7 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
 		if(status.equals(TaskStatus.DONE)) {
 			// task completed successfully
 			schedulingPool.setTaskStatus(completedTask, TaskStatus.DONE);
+			log.debug("TASK {} reported as DONE", completedTask.toString());
 		} else {
 			if(string.isEmpty()) {
 				// weird - task is in error and no destinations reported as failed...

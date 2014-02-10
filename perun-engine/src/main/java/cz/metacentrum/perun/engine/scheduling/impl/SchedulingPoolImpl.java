@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 
+import cz.metacentrum.perun.core.api.Destination;
 import cz.metacentrum.perun.core.api.Facility;
 import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
 import cz.metacentrum.perun.engine.model.Pair;
@@ -56,6 +57,12 @@ public class SchedulingPoolImpl implements SchedulingPool {
     	synchronized(pool) {
     		if(taskIdMap.containsKey(task.getId())) {
     			log.warn("Task already is in the pool " + task.toString());
+    			// check if we have the destinations too
+    			Task currentTask = taskIdMap.get(task.getId());
+    			List<Destination> destinations = currentTask.getDestinations();
+    			if(destinations == null || destinations.isEmpty()) {
+    				currentTask.setDestinations(task.getDestinations());
+    			}
     			return this.getSize();
     		}
     		taskIdMap.put(task.getId(), task);

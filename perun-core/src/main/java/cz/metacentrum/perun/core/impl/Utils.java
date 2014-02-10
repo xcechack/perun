@@ -310,9 +310,27 @@ public class Utils {
    * @throws InternalErrorException
    */
   public static int getNewId(Object jdbc, String sequenceName) throws InternalErrorException {
-    String dbType = getPropertyFromConfiguration("perun.db.type");
+	  
+	String dbType = getPropertyFromConfiguration("perun.db.type");
     
-    String query = "";
+	String url = "";
+	
+	// try to deduce database type from jdbc connection metadata
+	try {
+		if (jdbc instanceof JdbcTemplate) {
+			url = ((JdbcTemplate)jdbc).getDataSource().getConnection().getMetaData().getURL();
+		}
+	} catch (SQLException e) {
+	}
+	if(url.matches("hsqldb")) {
+		dbType = "hsqldb";
+	} else if(url.matches("oracle")) {
+		dbType = "oracle";
+	} else if(url.matches("postgresql")) {
+		dbType = "postgresql";
+	}
+	
+	String query = "";
     if (dbType.equals("oracle")) {
       query = "select " + sequenceName + ".nextval from dual";
     } else if (dbType.equals("postgresql")) {

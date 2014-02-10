@@ -39,7 +39,7 @@ public class ExecutorEngineWorkerImplTest extends TestBase implements TaskResult
 	
 	private int count = 0;
 	
-	@IfProfileValue(name="perun.test.groups", values=("unit-tests-no"))
+	@IfProfileValue(name="perun.test.groups", values=("unit-tests"))
 	@Test
 	public void runSendTest() throws InternalErrorException {
 		ExecutorEngineWorker worker = (ExecutorEngineWorker) beanFactory.getBean("executorEngineWorker");

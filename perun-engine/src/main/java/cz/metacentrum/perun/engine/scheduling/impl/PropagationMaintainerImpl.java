@@ -105,7 +105,7 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
 		
 		rescheduleErrorTasks();
     	
-    	rescheduleOldDoneTasks();
+    	// rescheduleOldDoneTasks();
 
     }
 
@@ -487,6 +487,7 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
             	// no more retries, sorry
             	log.info("TASK [ " + task + "] in ERROR state has no more retries, bailing out.");
             	schedulingPool.removeTask(task);
+    			log.debug("TASK {} removed from database.", task.getId());
             	continue;
             }
             task.setRecurrence(recurrence);

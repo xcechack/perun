@@ -57,12 +57,6 @@ public class SchedulingPoolImpl implements SchedulingPool {
     	synchronized(pool) {
     		if(taskIdMap.containsKey(task.getId())) {
     			log.warn("Task already is in the pool " + task.toString());
-    			// check if we have the destinations too
-    			Task currentTask = taskIdMap.get(task.getId());
-    			List<Destination> destinations = currentTask.getDestinations();
-    			if(destinations == null || destinations.isEmpty()) {
-    				currentTask.setDestinations(task.getDestinations());
-    			}
     			return this.getSize();
     		}
     		taskIdMap.put(task.getId(), task);

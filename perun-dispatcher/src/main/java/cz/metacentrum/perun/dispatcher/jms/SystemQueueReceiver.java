@@ -71,6 +71,7 @@ public class SystemQueueReceiver implements Runnable {
 						log.debug("System message received[" + messageReceived.getText() + "]");
 					}
 					systemQueueProcessor.processDispatcherQueueAndMatchingRule(messageReceived.getText());
+					messageReceived.acknowledge();
 				}
 				if (log.isDebugEnabled()) {
 					if (messageReceived == null) {

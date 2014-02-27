@@ -330,6 +330,7 @@ public class AuditParser {
         destination.setId(Integer.valueOf(beanAttr.get("id")).intValue());
         destination.setDestination(BeansUtils.eraseEscaping(beanAttr.get("destination")));
         destination.setType(BeansUtils.eraseEscaping(beanAttr.get("type")));
+        destination.setPropagationType(BeansUtils.eraseEscaping(beanAttr.get("propagationtype")));
         return destination;
     }
     

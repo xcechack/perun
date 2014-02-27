@@ -30,7 +30,7 @@ import cz.metacentrum.perun.taskslib.model.Task.TaskStatus;
  * 
  */
 @org.springframework.stereotype.Service(value = "taskExecutorEngine")
-@Transactional
+/* @Transactional */
 public class TaskExecutorEngineImpl implements TaskExecutorEngine {
     private final static Logger log = LoggerFactory.getLogger(TaskExecutorEngineImpl.class);
 
@@ -340,5 +340,35 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
     public void setTaskExecutorSendWorkers(TaskExecutor taskExecutorSendWorkers) {
         this.taskExecutorSendWorkers = taskExecutorSendWorkers;
     }
+
+
+	public DependenciesResolver getDependencyResolver() {
+		return dependencyResolver;
+	}
+
+
+	public void setDependencyResolver(DependenciesResolver dependencyResolver) {
+		this.dependencyResolver = dependencyResolver;
+	}
+
+
+	public TaskStatusManager getTaskStatusManager() {
+		return taskStatusManager;
+	}
+
+
+	public void setTaskStatusManager(TaskStatusManager taskStatusManager) {
+		this.taskStatusManager = taskStatusManager;
+	}
+
+
+	public SchedulingPool getSchedulingPool() {
+		return schedulingPool;
+	}
+
+
+	public void setSchedulingPool(SchedulingPool schedulingPool) {
+		this.schedulingPool = schedulingPool;
+	}
 
 }

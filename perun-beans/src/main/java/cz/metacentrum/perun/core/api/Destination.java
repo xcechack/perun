@@ -18,9 +18,13 @@ public class Destination extends Auditable implements Comparable<Destination> {
     public final static String DESTINATIONURLTYPE = "url";
     public final static String DESTINATIONUSERHOSTTYPE = "user@host";
     public final static String DESTINATIONUSERHOSTPORTTYPE = "user@host:port";
+
+    private static final String PROPAGATIONTYPE_PARALLEL = "PARALLEL";
+    private static final String PROPAGATIONTYPE_SERIAL = "SERIAL";
     
     private String destination;
     private String type;
+	private String propagationType;
 
     public Destination() {
       super();
@@ -35,6 +39,12 @@ public class Destination extends Auditable implements Comparable<Destination> {
         this(id, destination);
         this.type = type;
     }
+    
+    public Destination(int id, String destination, String type, String propagationType) {
+        this(id, destination, type);
+        this.propagationType = propagationType;
+    }
+    
     
     public Destination(int id, String destination, String type, String createdAt, String createdBy, String modifiedAt, String modifiedBy, Integer createdByUid, Integer modifiedByUid) {
         super(id, createdAt, createdBy, modifiedAt, modifiedBy, createdByUid, modifiedByUid);
@@ -67,6 +77,19 @@ public class Destination extends Auditable implements Comparable<Destination> {
      */
     public String getType() {
         return this.type;
+    }
+    
+    /**
+     * 	Gets the propagation type for this instance.
+     * 
+     *  @return The propagation type, either "PARALLEL" or "SERIAL"
+     */
+    public String getPropagationType() {
+    	if(null == this.propagationType) {
+    		return Destination.PROPAGATIONTYPE_PARALLEL;
+    	} else {
+    		return this.propagationType;
+    	}
     }
     
     /**
@@ -105,12 +128,23 @@ public class Destination extends Auditable implements Comparable<Destination> {
         this.type = type;
     }
     
+    /**
+     * Sets the propagation type for this instance.
+     *
+     * @param type The propagation type.
+     */
+    public void setPropagationType(String type) {
+        this.propagationType = type;
+    }
+
     @Override
     public String serializeToString() {
         return this.getClass().getSimpleName() +":[" +
 	"id=<" + getId() + ">" +
 	", destination=<" + (getDestination() == null ? "\\0" : BeansUtils.createEscaping(getDestination())) + ">" +
-	", type=<" + (getType() == null ? "\\0" : BeansUtils.createEscaping(getType())) + ">" +
+	", type=<" + (getType() == null ? "\\0" : BeansUtils.createEscaping(getType())) + 
+	", propagationtype=<" + (getPropagationType() == null ? "\\0" : BeansUtils.createEscaping(getPropagationType())) 
+	+ ">" +
 	']';
     }
     
@@ -119,6 +153,7 @@ public class Destination extends Auditable implements Comparable<Destination> {
                 + "id='" + getId()
                 + "', destination='" + destination
                 + "', type='" + type
+                + "', propagationtype='" + propagationType
                 + "']";
     }
 

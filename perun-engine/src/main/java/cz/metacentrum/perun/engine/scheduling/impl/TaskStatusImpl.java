@@ -51,7 +51,7 @@ public class TaskStatusImpl implements TaskStatus {
 			countAllDone = 0;
 			countAllError = 0;
 			for(Destination destination : task.getDestinations()) {
-				if(destination.getType().equals("PARALLEL")) {
+				if(destination.getPropagationType().equals("PARALLEL")) {
 					allDestinations.put(destination, TaskDestinationStatus.WAITING);
 				} else {
 					oneOfAllDestinations.put(destination, TaskDestinationStatus.WAITING);
@@ -109,7 +109,7 @@ public class TaskStatusImpl implements TaskStatus {
 		synchronized(this) {
 			switch(status) {
 				case DONE:
-					if(destination.getType().equals("PARALLEL")) {
+					if(destination.getPropagationType().equals("PARALLEL")) {
 						countAllDone += 1;
 					} else {
 						oneOfAllSuccess = true;
@@ -117,7 +117,7 @@ public class TaskStatusImpl implements TaskStatus {
 					break;
 				
 				case ERROR:
-					if(destination.getType().equals("PARALLEL")) {
+					if(destination.getPropagationType().equals("PARALLEL")) {
 						countAllError += 1;
 					}
 					break;
@@ -131,7 +131,7 @@ public class TaskStatusImpl implements TaskStatus {
 
 	private Map<Destination, TaskDestinationStatus> findMapForDestination(Destination destination) throws InternalErrorException {
 		Map<Destination, TaskDestinationStatus> map;
-		if(destination.getType().equals("PARALLEL")) {
+		if(destination.getPropagationType().equals("PARALLEL")) {
 			map = allDestinations;
 		} else {
 			map = oneOfAllDestinations;

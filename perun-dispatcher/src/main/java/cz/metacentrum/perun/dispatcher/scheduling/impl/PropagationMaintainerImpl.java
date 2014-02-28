@@ -334,6 +334,19 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     }
 */
     
+    private void setAllGenerateDependenciesToNone(Task task) {
+    	List<ExecService> dependencies = this.dependenciesResolver.listDependencies(task.getExecService());
+    	
+    	for(ExecService dependencyToBeSetDirty : dependencies) {
+            if (dependencyToBeSetDirty.getExecServiceType().equals(ExecServiceType.GENERATE)) {
+                Task taskToBeSetDirty = schedulingPool.getTask(dependencyToBeSetDirty, task.getFacility());
+                if (taskToBeSetDirty != null) {
+                    schedulingPool.setTaskStatus(taskToBeSetDirty, TaskStatus.NONE);
+                }
+            }
+        }
+    }
+
     @Override
     public void setAllGenerateDependenciesToNone(List<ExecService> dependencies, Facility facility) {
         setAllGenerateDependenciesToNone(dependencies, facility.getId());
@@ -383,6 +396,11 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
 
 		completedTask.setEndTime(new Date(System.currentTimeMillis()));
 
+		// if we are going to run this task again, make sure to generate up to date data
+		if(completedTask.getExecService().getExecServiceType().equals(ExecServiceType.SEND)) {
+			this.setAllGenerateDependenciesToNone(completedTask);
+		}
+		
 		if(status.equals(TaskStatus.DONE)) {
 			// task completed successfully
 			schedulingPool.setTaskStatus(completedTask, TaskStatus.DONE);
@@ -413,7 +431,7 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
 	}
 
 
-    /*  
+	/*  
     public TaskManager getTaskManager() {
         return taskManager;
     }

@@ -428,7 +428,9 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     private void checkFinishedTasks() {
     	// report finished tasks back to scheduler
     	// clear all tasks we are done with (ie. DONE, ERROR with no recurrence left)
-    	for(Task task : schedulingPool.getDoneTasks()) {
+    	List<Task> tasklist = schedulingPool.getDoneTasks();
+    	log.debug("There are {} DONE tasks", tasklist.size());
+    	for(Task task : tasklist) {
     		log.debug("TASK " + task.toString() + " finished");
     		try {
     			log.debug("TASK reported as finished at " + System.currentTimeMillis());
@@ -439,7 +441,10 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
 				log.error("Failed to report finished task " + task.toString() + ": " + e.getMessage());
 			}
     	}
-    	for(Task task : schedulingPool.getErrorTasks()) {
+    	
+    	tasklist = schedulingPool.getErrorTasks();
+    	log.debug("There are {} ERROR tasks", tasklist.size());
+    	for(Task task : tasklist) {
     		if(task.getRecurrence() > 0) {
         		log.debug("TASK " + task.toString() + " finished in error, will reschedule");
     			continue;
@@ -598,6 +603,8 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     	List<Task> suspiciousTasks = schedulingPool.getProcessingTasks();
     	suspiciousTasks.addAll(schedulingPool.getPlannedTasks());
     	
+    	log.debug("There are {} tasks that are PLANNED or PROCESSING", suspiciousTasks.size());
+    	
     	for(Task task: suspiciousTasks) {
     		log.debug("checking task " + task.toString() + " for staying around too long...");
     		//count how many minutes the task stays in one state - if the state is PLANNED count it from when it was scheduled ; if it is PROCESSING count it from when it started
@@ -632,8 +639,11 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
 
     private void rescheduleOldDoneTasks() {
         //Reschedule SEND tasks in DONE that haven't been running for quite a while
+    	List<Task> donetasks = schedulingPool.getDoneTasks();
+    	
+    	log.debug("There are {} completed tasks", donetasks.size());
 
-    	for(Task task : schedulingPool.getDoneTasks()) {
+    	for(Task task : donetasks) {
             //skip GEN tasks
             if(task.getExecService().getExecServiceType().equals(ExecService.ExecServiceType.GENERATE)) continue;
             

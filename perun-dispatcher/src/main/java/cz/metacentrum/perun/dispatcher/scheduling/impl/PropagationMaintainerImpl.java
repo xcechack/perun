@@ -341,7 +341,8 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
             if (dependencyToBeSetDirty.getExecServiceType().equals(ExecServiceType.GENERATE)) {
                 Task taskToBeSetDirty = schedulingPool.getTask(dependencyToBeSetDirty, task.getFacility());
                 if (taskToBeSetDirty != null) {
-                    schedulingPool.setTaskStatus(taskToBeSetDirty, TaskStatus.NONE);
+                	log.debug("Setting GEN dependency task {} to NONE state to regenerate data for completed task {}", taskToBeSetDirty, task);
+                	schedulingPool.setTaskStatus(taskToBeSetDirty, TaskStatus.NONE);
                 }
             }
         }

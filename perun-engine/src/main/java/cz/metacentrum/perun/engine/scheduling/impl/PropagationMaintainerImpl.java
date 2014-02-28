@@ -611,7 +611,7 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
             int howManyMinutesAgo = (int) (System.currentTimeMillis() - ( task.getStatus().equals(TaskStatus.PLANNED) ? task.getSchedule() : task.getStartTime() ).getTime()) / 1000 / 60;
 
             //If too much time has passed something is broken
-            if (howManyMinutesAgo >= 60) {
+            if (howManyMinutesAgo >= 180) {
                       log.error("ERROR: Task is stuck in PLANNED or PROCESSING state. Switching it to ERROR. {}", task);
                       task.setEndTime(new Date(System.currentTimeMillis()));
                       schedulingPool.setTaskStatus(task, TaskStatus.ERROR);

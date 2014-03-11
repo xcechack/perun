@@ -37,8 +37,6 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
 
     private TaskResultListener resultListener;
     @Autowired
-    private TaskManager taskManager;
-    @Autowired
     private TaskResultDao taskResultDao;
     private Task task;
     private Facility facility;
@@ -174,14 +172,6 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
         } else {
             throw new IllegalArgumentException("Expected ExecService type is SEND or GENERATE.");
         }
-    }
-
-    public TaskManager getTaskManager() {
-        return taskManager;
-    }
-
-    public void setTaskManager(TaskManager taskManager) {
-        this.taskManager = taskManager;
     }
 
     public TaskResultDao getTaskResultDao() {

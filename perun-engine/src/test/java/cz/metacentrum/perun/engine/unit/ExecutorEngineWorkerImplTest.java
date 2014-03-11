@@ -48,7 +48,8 @@ public class ExecutorEngineWorkerImplTest extends TestBase implements TaskResult
 		for(Task task : taskManager.listAllTasks(0)) {
 				log.debug("task in db " + ((task == null) ? "null" : task.toString()));
 		}
-    	worker.setTask(task1);
+		count = 0;
+		worker.setTask(task1);
 		worker.setExecService(task1.getExecService());
 		worker.setFacility(task1.getFacility());
 		worker.setDestination(destination1);
@@ -66,7 +67,8 @@ public class ExecutorEngineWorkerImplTest extends TestBase implements TaskResult
 		for(Task task : taskManager.listAllTasks(0)) {
 				log.debug("task in db " + ((task == null) ? "null" : task.toString()));
 		}
-    	worker.setTask(task_gen);
+		count = 0;
+		worker.setTask(task_gen);
 		worker.setExecService(task_gen.getExecService());
 		worker.setFacility(task_gen.getFacility());
 		worker.setDestination(destination1);

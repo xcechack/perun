@@ -136,7 +136,10 @@ public class SchedulingPoolImpl implements SchedulingPool {
 	@Override
 	public void removeTask(Task task) {
 		synchronized(pool) {
-			pool.get(task.getStatus()).remove(task);
+			List<Task> tasklist = pool.get(task.getStatus());
+			if(tasklist != null) {
+				tasklist.remove(task);
+			}
 			taskIdMap.remove(task.getId());
 		}
 		taskManager.removeTask(task.getId(), 0);

@@ -187,8 +187,12 @@ public class SchedulingPoolImpl implements SchedulingPool {
     		// TODO: what about possible duplicates?
     		log.debug("Added task " + task.toString());
 		}
-		
-	}
+    	log.info("Pool contains: ");
+		for(TaskStatus status : TaskStatus.class.getEnumConstants()) {
+    		log.info("  - {} tasks in state {}", pool.get(status).size(), status.toString());
+    	}
+    	
+	}	
 
 	@Override
 	public void setQueueForTask(Task task, DispatcherQueue queueForTask) {

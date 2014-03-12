@@ -51,23 +51,53 @@ public class SchedulingPoolImpl implements SchedulingPool {
 	}
 
 	@Override
-	public int addToPool(Task task, DispatcherQueue dispatcherQueue) {
-		// XXX needs to be synchronized, but on what?
-		synchronized(tasksById) {
-			if(!tasksById.containsKey(task.getId())) {
-				log.debug("Adding task to pool " + task);
-				if(null == task.getStatus()) {
-					task.setStatus(TaskStatus.NONE);
-				}
-				tasksById.put(task.getId(), new Pair<Task, DispatcherQueue>(task, dispatcherQueue));
-				tasksByServiceAndFacility.put(new Pair<ExecService, Facility>(task.getExecService(), task.getFacility()), task);
-				pool.get(task.getStatus()).add(task);
+	public int addToPool(Task task, DispatcherQueue dispatcherQueue) throws InternalErrorException {
+		if(task.getId() == 0) {
+			// this task was created new, so we have to check the ExecService,Facility pair
+			synchronized(tasksByServiceAndFacility) {
+					if(!tasksByServiceAndFacility.containsKey(
+							new Pair<ExecService, Facility>(task.getExecService(), task.getFacility()))) {
+						log.debug("Adding new task to pool " + task);
+						if(null == task.getStatus()) {
+							task.setStatus(TaskStatus.NONE);
+						}
+						try {
+							int id = taskManager.scheduleNewTask(task, dispatcherQueue.getClientID());
+							task.setId(id);
+						} catch (InternalErrorException e) {
+							log.error("Error storing task " + task + " into database: " + e.getMessage());
+							throw new InternalErrorException("Could not assign id to newly created task", e);
+						}
+						tasksByServiceAndFacility.put(new Pair<ExecService, Facility>(task.getExecService(), task.getFacility()), task);
+						tasksById.put(task.getId(), new Pair<Task, DispatcherQueue>(task, dispatcherQueue));
+						pool.get(task.getStatus()).add(task);
+					} else {
+						log.debug("There already is task for given ExecService and Facility pair");
+					}
 			}
-		}
-		try {
-			taskManager.scheduleNewTask(task, dispatcherQueue.getClientID());
-		} catch (InternalErrorException e) {
-			log.error("Error storing task " + task + " into database: " + e.getMessage());
+		} else {
+			// weird - we should not be adding tasks with id present... 
+			synchronized(tasksById) {
+				if(!tasksById.containsKey(task.getId())) {
+					log.debug("Adding task to pool " + task);
+					if(null == task.getStatus()) {
+						task.setStatus(TaskStatus.NONE);
+					}
+					tasksById.put(task.getId(), new Pair<Task, DispatcherQueue>(task, dispatcherQueue));
+					tasksByServiceAndFacility.put(new Pair<ExecService, Facility>(task.getExecService(), task.getFacility()), task);
+					pool.get(task.getStatus()).add(task);
+				}
+			}
+			try {
+				Task existingTask = taskManager.getTaskById(task.getId(), dispatcherQueue.getClientID());
+				if(existingTask == null) {
+					taskManager.scheduleNewTask(task, dispatcherQueue.getClientID());
+				} else {
+					taskManager.updateTask(task, dispatcherQueue.getClientID());
+				}
+			} catch (InternalErrorException e) {
+				log.error("Error storing task " + task + " into database: " + e.getMessage());
+			}
 		}
 		return getSize();
 	}

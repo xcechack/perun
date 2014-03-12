@@ -19,6 +19,7 @@ import org.springframework.util.Assert;
 import cz.metacentrum.perun.core.api.Facility;
 import cz.metacentrum.perun.dispatcher.TestBase;
 import cz.metacentrum.perun.core.api.Pair;
+import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
 import cz.metacentrum.perun.dispatcher.jms.DispatcherQueue;
 import cz.metacentrum.perun.dispatcher.scheduling.SchedulingPool;
 import cz.metacentrum.perun.taskslib.model.ExecService;
@@ -43,7 +44,7 @@ public class SchedulingPoolTest extends TestBase {
     private Task task2;
     
     @Before
-    public void setup() {
+    public void setup() throws InternalErrorException {
     	task1.setStatus(TaskStatus.NONE);
     	task1.setSchedule(new Date(System.currentTimeMillis()));
     	dispatcherQueue = new DispatcherQueue(1, "test-queue");
@@ -57,7 +58,7 @@ public class SchedulingPoolTest extends TestBase {
     
     @IfProfileValue(name="perun.test.groups", values=("unit-tests"))
     @Test 
-    public void addToPoolTest() {
+    public void addToPoolTest() throws InternalErrorException {
     	Assert.isTrue(schedulingPool.getSize() == 1, "original size is 1");
     	schedulingPool.addToPool(task1, dispatcherQueue);
     	Assert.isTrue(schedulingPool.getSize() == 1, "new size is 1"); // pool already contains this task

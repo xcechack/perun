@@ -34,8 +34,9 @@ public interface SchedulingPool {
      * @param task
      * @param dispatcherQueue 
      * @return
+     * @throws InternalErrorException 
      */
-    int addToPool(Task task, DispatcherQueue dispatcherQueue);
+    int addToPool(Task task, DispatcherQueue dispatcherQueue) throws InternalErrorException;
 
 	Task getTaskById(int id);
 

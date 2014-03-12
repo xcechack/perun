@@ -267,8 +267,12 @@ public class TaskSchedulerImpl implements TaskScheduler {
 		task.setExecService(dependency);
 		task.setFacility(facility);
 		task.setSchedule(time);
-		schedulingPool.addToPool(task, dispatcherQueue);
-		scheduleTask(task);
+		try {
+			schedulingPool.addToPool(task, dispatcherQueue);
+			scheduleTask(task);
+		} catch (InternalErrorException e) {
+			log.error("Could not schedule new task: " + e.getMessage());
+		}
 		//schedulingPool.setTaskStatus(task, TaskStatus.NONE);
 	}
 

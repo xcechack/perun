@@ -467,6 +467,8 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     		log.debug("TASK " + task.toString() + " finished in error, remaining destinations: " + destinations_s);
     		try {
     			jmsQueueManager.reportFinishedTask(task, destinations_s.toString());
+    			schedulingPool.removeTask(task);
+    			log.debug("TASK {} removed from database.", task.getId());
 			} catch (JMSException e) {
 				log.error("Failed to report finished task " + task.toString() + ": " + e.getMessage());
 			}

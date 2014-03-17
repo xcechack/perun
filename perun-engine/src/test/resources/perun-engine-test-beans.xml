@@ -16,25 +16,29 @@ http://www.springframework.org/schema/jdbc http://www.springframework.org/schema
 	<bean id="destination1" class="cz.metacentrum.perun.core.api.Destination">
 		<constructor-arg name="id" value="1" />
 		<constructor-arg name="destination" value="par_dest1" />
-		<constructor-arg name="type" value="PARALLEL" />
+		<constructor-arg name="type" value="host" />
+		<constructor-arg name="propagationType" value="PARALLEL" />
 	</bean>
 
 	<bean id="destination2" class="cz.metacentrum.perun.core.api.Destination">
 		<constructor-arg name="id" value="2" />
 		<constructor-arg name="destination" value="par_dest2" />
-		<constructor-arg name="type" value="PARALLEL" />
+		<constructor-arg name="type" value="host" />
+		<constructor-arg name="propagationType" value="PARALLEL" />
 	</bean>
 
 	<bean id="destination3" class="cz.metacentrum.perun.core.api.Destination">
 		<constructor-arg name="id" value="3" />
 		<constructor-arg name="destination" value="one_dest1" />
-		<constructor-arg name="type" value="ONE" />
+		<constructor-arg name="type" value="host" />
+		<constructor-arg name="propagationType" value="ONE" />
 	</bean>
 
 	<bean id="destination4" class="cz.metacentrum.perun.core.api.Destination">
 		<constructor-arg name="id" value="4" />
 		<constructor-arg name="destination" value="one_dest2" />
-		<constructor-arg name="type" value="ONE" />
+		<constructor-arg name="type" value="host" />
+		<constructor-arg name="propagationType" value="ONE" />
 	</bean>
 
 	<bean id="service1" class="cz.metacentrum.perun.core.api.Service">

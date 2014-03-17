@@ -17,6 +17,7 @@ import cz.metacentrum.perun.engine.scheduling.ExecutorEngineWorker;
 import cz.metacentrum.perun.engine.scheduling.SchedulingPool;
 import cz.metacentrum.perun.engine.scheduling.TaskResultListener;
 import cz.metacentrum.perun.engine.scheduling.impl.TaskExecutorEngineImpl;
+import cz.metacentrum.perun.taskslib.dao.TaskResultDao;
 import cz.metacentrum.perun.taskslib.model.Task;
 import cz.metacentrum.perun.taskslib.model.TaskResult;
 import cz.metacentrum.perun.taskslib.service.TaskManager;
@@ -36,6 +37,8 @@ public class ExecutorEngineWorkerImplTest extends TestBase implements TaskResult
 	SchedulingPool schedulingPool;
 	@Autowired
 	TaskManager taskManager;
+	@Autowired 
+	TaskResultDao taskResultDao;
 	
 	private int count = 0;
 	
@@ -55,6 +58,7 @@ public class ExecutorEngineWorkerImplTest extends TestBase implements TaskResult
 		worker.setDestination(destination1);
 		worker.setResultListener(this);
 		worker.run();
+		log.debug("count is {}", count);
 		Assert.isTrue(count == 1, "count 1");
 	}
 
@@ -91,6 +95,7 @@ public class ExecutorEngineWorkerImplTest extends TestBase implements TaskResult
 	
 	@After
 	public void cleanup() {
+		taskResultDao.clearAll();
 		schedulingPool.removeTask(task1);
 		schedulingPool.removeTask(task_gen);
 	}

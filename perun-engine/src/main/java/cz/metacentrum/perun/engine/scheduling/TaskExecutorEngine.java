@@ -1,5 +1,7 @@
 package cz.metacentrum.perun.engine.scheduling;
 
+import org.springframework.core.task.TaskExecutor;
+
 /**
  * 
  * @author Michal Karm Babacek
@@ -16,5 +18,6 @@ public interface TaskExecutorEngine {
 	public void setTaskStatusManager(TaskStatusManager taskStatusManager);
 	public SchedulingPool getSchedulingPool();
 	public void setSchedulingPool(SchedulingPool schedulingPool);
-
+	public void setTaskExecutorSendWorkers(TaskExecutor sendWorkers);
+	public void setTaskExecutorGenWorkers(TaskExecutor genWorkers);
 }

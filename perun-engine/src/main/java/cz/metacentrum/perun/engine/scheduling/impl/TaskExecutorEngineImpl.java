@@ -46,7 +46,7 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
     private TaskExecutor taskExecutorSendWorkers;
     @Autowired
     private BeanFactory beanFactory;
-/* absolutely do not wantn this, its a unit testing nightmare
+/* absolutely do not want this, its a unit testing nightmare
     @Autowired
     private EngineManager engineManager;
  */

@@ -105,7 +105,7 @@ public class TaskStatusImpl implements TaskStatus {
 			aDestination = destination;
 		}
 		Map<Destination, TaskDestinationStatus> map = findMapForDestination(aDestination);
-		return map.get(destination);
+		return map.get(aDestination);
 	}
 
 	@Override
@@ -121,7 +121,7 @@ public class TaskStatusImpl implements TaskStatus {
 		synchronized(this) {
 			switch(status) {
 				case DONE:
-					if(destination.getPropagationType().equals("PARALLEL")) {
+					if(aDestination.getPropagationType().equals("PARALLEL")) {
 						countAllDone += 1;
 					} else {
 						oneOfAllSuccess = true;
@@ -129,7 +129,7 @@ public class TaskStatusImpl implements TaskStatus {
 					break;
 				
 				case ERROR:
-					if(destination.getPropagationType().equals("PARALLEL")) {
+					if(aDestination.getPropagationType().equals("PARALLEL")) {
 						countAllError += 1;
 					}
 					break;
@@ -138,7 +138,7 @@ public class TaskStatusImpl implements TaskStatus {
 					break;
 			}
 		}
-		map.put(destination, status);
+		map.put(aDestination, status);
 	}
 
 	private Map<Destination, TaskDestinationStatus> findMapForDestination(Destination destination) throws InternalErrorException {

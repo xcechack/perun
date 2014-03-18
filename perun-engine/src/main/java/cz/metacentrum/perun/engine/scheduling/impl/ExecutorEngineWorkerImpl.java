@@ -164,7 +164,6 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
                 }
             } finally {
                   String ret = returnCode == -1 ? "unknown" : String.valueOf(returnCode);
-                  log.debug("SEND task ended. Ret code " + ret + ". STDOUT: {}  STDERR: {}. Task: " + task, stdout, stderr);
             }
 
 

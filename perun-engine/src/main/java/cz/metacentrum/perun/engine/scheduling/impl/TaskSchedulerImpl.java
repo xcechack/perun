@@ -91,8 +91,9 @@ public class TaskSchedulerImpl implements TaskScheduler {
         	}
         	task.setDestinations(destinations);
 		}
-		if(destinations == null || destinations.isEmpty()) {
-			log.info("No destinations found for task {}, marking as DONE", task.getId());
+		if(task.getExecService().getExecServiceType().equals(ExecServiceType.SEND) && 
+				(destinations == null || destinations.isEmpty())) {
+			log.info("No destinations found for SEND task {}, marking as DONE", task.getId());
 			schedulingPool.setTaskStatus(task, TaskStatus.DONE);
 		} else {
 			schedulingPool.setTaskStatus(task, TaskStatus.PLANNED);

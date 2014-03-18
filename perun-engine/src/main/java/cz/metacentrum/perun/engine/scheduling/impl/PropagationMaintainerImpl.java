@@ -610,7 +610,17 @@ public class PropagationMaintainerImpl implements PropagationMaintainer {
     	for(Task task: suspiciousTasks) {
     		log.debug("checking task " + task.toString() + " for staying around too long...");
     		//count how many minutes the task stays in one state - if the state is PLANNED count it from when it was scheduled ; if it is PROCESSING count it from when it started
-            int howManyMinutesAgo = (int) (System.currentTimeMillis() - ( task.getStatus().equals(TaskStatus.PLANNED) ? task.getSchedule() : task.getStartTime() ).getTime()) / 1000 / 60;
+    		Date checkDate = task.getStatus().equals(TaskStatus.PLANNED) ? task.getSchedule() : task.getStartTime(); 
+    		if(checkDate == null) {
+    			log.error("ERROR: task in state {} has no corresponding timestamp", task.getStatus());
+    			checkDate = new Date(System.currentTimeMillis());
+    			if(task.getStatus().equals(TaskStatus.PLANNED)) {
+    				task.setSchedule(checkDate);
+    			} else {
+    				task.setStartTime(checkDate);
+    			}
+    			    		}
+    		int howManyMinutesAgo = (int) (System.currentTimeMillis() - checkDate.getTime()) / 1000 / 60;
 
             //If too much time has passed something is broken
             if (howManyMinutesAgo >= 180) {

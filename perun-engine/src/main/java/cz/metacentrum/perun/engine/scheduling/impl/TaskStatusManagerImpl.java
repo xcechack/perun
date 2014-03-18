@@ -59,7 +59,7 @@ public class TaskStatusManagerImpl implements TaskStatusManager, TaskResultListe
 			taskStatus.setDestinationStatus(destination, TaskDestinationStatus.DONE);
 			taskStatus.setDestinationResult(destination, result);
 		} catch (InternalErrorException e) {
-			log.error("Error setting DONE status for task " + task.toString() + ":" + e.getMessage());
+			log.error("Error setting DONE status for task " + task.toString() + ": " + e.getMessage());
 		}
 		if(taskStatus.isTaskFinished()) {
 			schedulingPool.setTaskStatus(task, taskStatus.getTaskStatus());
@@ -74,7 +74,7 @@ public class TaskStatusManagerImpl implements TaskStatusManager, TaskResultListe
 			taskStatus.setDestinationStatus(destination, TaskDestinationStatus.ERROR);
 			taskStatus.setDestinationResult(destination, result);
 		} catch (InternalErrorException e) {
-			log.error("Error setting ERROR status for task " + task.toString() + ":" +  e.getMessage());
+			log.error("Error setting ERROR status for task " + task.toString() + ": " +  e.getMessage());
 		}
 		if(taskStatus.isTaskFinished()) {
 			schedulingPool.setTaskStatus(task, taskStatus.getTaskStatus());

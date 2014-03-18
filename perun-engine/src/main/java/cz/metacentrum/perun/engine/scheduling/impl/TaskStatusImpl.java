@@ -98,13 +98,25 @@ public class TaskStatusImpl implements TaskStatus {
 
 	@Override
 	public TaskDestinationStatus getDestinationStatus(Destination destination) throws InternalErrorException {
-		Map<Destination, TaskDestinationStatus> map = findMapForDestination(destination);
+		Destination aDestination;
+		if(task.getExecService().getExecServiceType().equals(ExecServiceType.GENERATE)) {
+			aDestination = fakeGenDestination;
+		} else {
+			aDestination = destination;
+		}
+		Map<Destination, TaskDestinationStatus> map = findMapForDestination(aDestination);
 		return map.get(destination);
 	}
 
 	@Override
 	public void setDestinationStatus(Destination destination, TaskDestinationStatus status) throws InternalErrorException {
-		Map<Destination, TaskDestinationStatus> map = findMapForDestination(destination);
+		Destination aDestination;
+		if(task.getExecService().getExecServiceType().equals(ExecServiceType.GENERATE)) {
+			aDestination = fakeGenDestination;
+		} else {
+			aDestination = destination;
+		}
+		Map<Destination, TaskDestinationStatus> map = findMapForDestination(aDestination);
 		// we have to synchronize when accessing the counters
 		synchronized(this) {
 			switch(status) {
@@ -144,8 +156,14 @@ public class TaskStatusImpl implements TaskStatus {
 
 	@Override
 	public void setDestinationResult(Destination destination, TaskResult result) {
+		Destination aDestination;
+		if(task.getExecService().getExecServiceType().equals(ExecServiceType.GENERATE)) {
+			aDestination = fakeGenDestination;
+		} else {
+			aDestination = destination;
+		}
 		if(result != null) {
-			destinationResults.put(destination.getId(), result);
+			destinationResults.put(aDestination.getId(), result);
 		}
 		// TODO: cross check destination status
 		// TaskResult.DENIED counts as TaskDestinationStatus.DONE

@@ -80,8 +80,8 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
                 //task.setStatus(returnCode == 0 ? TaskStatus.DONE : TaskStatus.ERROR);
                 task.setEndTime(new Date(System.currentTimeMillis()));
                 if(returnCode != 0) {
-                  log.info("GEN task failed. Ret code " + returnCode + ". STDOUT: {}  STDERR: {}. Task: " + task, stdout, stderr);
-                  resultListener.onTaskDestinationError(task, destination, null);
+                	log.info("GEN task failed. Ret code " + returnCode + ". STDOUT: {}  STDERR: {}. Task: " + task, stdout, stderr);
+                	resultListener.onTaskDestinationError(task, destination, null);
                 } else {
                 	resultListener.onTaskDestinationDone(task, destination, null);
                 }

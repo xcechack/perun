@@ -98,30 +98,18 @@ public class TaskStatusImpl implements TaskStatus {
 
 	@Override
 	public TaskDestinationStatus getDestinationStatus(Destination destination) throws InternalErrorException {
-		Destination aDestination;
-		if(task.getExecService().getExecServiceType().equals(ExecServiceType.GENERATE)) {
-			aDestination = fakeGenDestination;
-		} else {
-			aDestination = destination;
-		}
-		Map<Destination, TaskDestinationStatus> map = findMapForDestination(aDestination);
-		return map.get(aDestination);
+		Map<Destination, TaskDestinationStatus> map = findMapForDestination(destination);
+		return map.get(destination);
 	}
 
 	@Override
 	public void setDestinationStatus(Destination destination, TaskDestinationStatus status) throws InternalErrorException {
-		Destination aDestination;
-		if(task.getExecService().getExecServiceType().equals(ExecServiceType.GENERATE)) {
-			aDestination = fakeGenDestination;
-		} else {
-			aDestination = destination;
-		}
-		Map<Destination, TaskDestinationStatus> map = findMapForDestination(aDestination);
+		Map<Destination, TaskDestinationStatus> map = findMapForDestination(destination);
 		// we have to synchronize when accessing the counters
 		synchronized(this) {
 			switch(status) {
 				case DONE:
-					if(aDestination.getPropagationType().equals("PARALLEL")) {
+					if(destination.getPropagationType().equals("PARALLEL")) {
 						countAllDone += 1;
 					} else {
 						oneOfAllSuccess = true;
@@ -129,7 +117,7 @@ public class TaskStatusImpl implements TaskStatus {
 					break;
 				
 				case ERROR:
-					if(aDestination.getPropagationType().equals("PARALLEL")) {
+					if(destination.getPropagationType().equals("PARALLEL")) {
 						countAllError += 1;
 					}
 					break;
@@ -138,7 +126,7 @@ public class TaskStatusImpl implements TaskStatus {
 					break;
 			}
 		}
-		map.put(aDestination, status);
+		map.put(destination, status);
 	}
 
 	private Map<Destination, TaskDestinationStatus> findMapForDestination(Destination destination) throws InternalErrorException {
@@ -156,14 +144,8 @@ public class TaskStatusImpl implements TaskStatus {
 
 	@Override
 	public void setDestinationResult(Destination destination, TaskResult result) {
-		Destination aDestination;
-		if(task.getExecService().getExecServiceType().equals(ExecServiceType.GENERATE)) {
-			aDestination = fakeGenDestination;
-		} else {
-			aDestination = destination;
-		}
 		if(result != null) {
-			destinationResults.put(aDestination.getId(), result);
+			destinationResults.put(destination.getId(), result);
 		}
 		// TODO: cross check destination status
 		// TaskResult.DENIED counts as TaskDestinationStatus.DONE

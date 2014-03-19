@@ -20,15 +20,17 @@ import cz.metacentrum.perun.core.api.Facility;
 import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
 import cz.metacentrum.perun.engine.model.Pair;
 import cz.metacentrum.perun.engine.scheduling.SchedulingPool;
+import cz.metacentrum.perun.engine.scheduling.TaskResultListener;
 import cz.metacentrum.perun.taskslib.model.ExecService;
 import cz.metacentrum.perun.taskslib.model.Task;
 import cz.metacentrum.perun.taskslib.model.Task.TaskStatus;
+import cz.metacentrum.perun.taskslib.model.TaskResult;
 import cz.metacentrum.perun.taskslib.service.TaskManager;
 
 @org.springframework.stereotype.Service(value = "schedulingPool")
 // Spring 3.0 default...
 @Scope(value = "singleton")
-public class SchedulingPoolImpl implements SchedulingPool {
+public class SchedulingPoolImpl implements SchedulingPool, TaskResultListener {
 
     private final static Logger log = LoggerFactory.getLogger(SchedulingPoolImpl.class);
 
@@ -230,6 +232,21 @@ public class SchedulingPoolImpl implements SchedulingPool {
     	for(TaskStatus status : TaskStatus.class.getEnumConstants()) {
     		pool.put(status, new ArrayList<Task>());
     	}
+	}
+
+	// implementation of TaskResultListener interface
+	//   - meant for GEN tasks
+	//   - does not take into account destinations, once the method is called, the task status is set accordingly
+	@Override
+	public void onTaskDestinationDone(Task task, Destination destination,
+			TaskResult result) {
+		this.setTaskStatus(task, TaskStatus.DONE);
+	}
+
+	@Override
+	public void onTaskDestinationError(Task task, Destination destination,
+			TaskResult result) {
+		this.setTaskStatus(task, TaskStatus.ERROR);
 	}
 	
 /*

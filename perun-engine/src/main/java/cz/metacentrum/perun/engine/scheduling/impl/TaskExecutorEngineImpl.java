@@ -21,6 +21,7 @@ import cz.metacentrum.perun.engine.scheduling.TaskExecutorEngine;
 import cz.metacentrum.perun.engine.scheduling.TaskResultListener;
 import cz.metacentrum.perun.engine.scheduling.TaskStatusManager;
 import cz.metacentrum.perun.engine.scheduling.TaskStatus.TaskDestinationStatus;
+import cz.metacentrum.perun.taskslib.model.ExecService.ExecServiceType;
 import cz.metacentrum.perun.taskslib.model.Task;
 import cz.metacentrum.perun.taskslib.model.Task.TaskStatus;
 
@@ -178,6 +179,11 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
         executorEngineWorker.setFacility(task.getFacility());
         executorEngineWorker.setExecService(task.getExecService());
         executorEngineWorker.setDestination(destination);
+        if(task.getExecService().getExecServiceType().equals(ExecServiceType.GENERATE)) {
+        	executorEngineWorker.setResultListener((TaskResultListener) schedulingPool);
+        } else {
+        	executorEngineWorker.setResultListener((TaskResultListener) taskStatusManager);
+        }
         taskExecutorSendWorkers.execute(executorEngineWorker);
     }
     
@@ -285,7 +291,6 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
 
 	protected ExecutorEngineWorker createExecutorEngineWorker() {
 		ExecutorEngineWorker worker =  (ExecutorEngineWorker) this.beanFactory.getBean("executorEngineWorker");
-		worker.setResultListener((TaskResultListener) taskStatusManager);
 		return worker;
 	}
 

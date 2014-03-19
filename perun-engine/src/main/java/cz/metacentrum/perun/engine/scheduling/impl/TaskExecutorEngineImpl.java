@@ -159,7 +159,9 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
 			}
         	if(proceed) {
         		try {
-					taskStatusManager.getTaskStatus(task).setDestinationStatus(destination, TaskDestinationStatus.PROCESSING);
+        	        if(task.getExecService().getExecServiceType().equals(ExecServiceType.SEND)) {
+        	        	taskStatusManager.getTaskStatus(task).setDestinationStatus(destination, TaskDestinationStatus.PROCESSING);
+        	        }
 				} catch (InternalErrorException e) {
 					log.error("Error setting status for destination {} of task {}", destination, task.toString());
 				}

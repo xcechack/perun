@@ -60,6 +60,8 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
 	private TaskStatusManager taskStatusManager;
     @Autowired
     private SchedulingPool schedulingPool;
+    
+    private int idCounter = 0;
 
     
     @Override
@@ -188,7 +190,8 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
     private void startWorker(Task task, Destination destination) {
     	log.debug("Starting worker for task " + task.getId() + " and destination " + destination.toString());
     	ExecutorEngineWorker executorEngineWorker = createExecutorEngineWorker();
-       
+        idCounter +=1;
+        executorEngineWorker.setID(idCounter);
         executorEngineWorker.setTask(task);
         executorEngineWorker.setFacility(task.getFacility());
         executorEngineWorker.setExecService(task.getExecService());

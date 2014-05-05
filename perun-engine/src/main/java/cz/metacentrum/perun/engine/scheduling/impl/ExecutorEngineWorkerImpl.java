@@ -52,6 +52,7 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
     private SchedulingPool schedulingPool;
     
     private WorkerLock lock;
+    int id;
     
     @Override
     public void run()  {
@@ -121,6 +122,7 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
 }
                
                 schedulingPool.setTaskStatus(task, TaskStatus.DONE);
+                task.setEndTime(new Date(System.currentTimeMillis()));
                
                 
                 //END OF TESTING
@@ -184,6 +186,7 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
 }
                
                 schedulingPool.setTaskStatus(task, TaskStatus.DONE);
+                task.setEndTime(new Date(System.currentTimeMillis()));
                
                 //END OF TESTING
                 
@@ -286,17 +289,26 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
        
         public String toString(){
         
-            return ("Worker of task with ID: "+this.getTask().getId()+" TYPE: "+this.getExecService().getExecServiceType()+ " FACILITY: "+this.getFacility()+ " STATUS: "+this.getTask().getStatus());
+            return ("Worker ID: "+this.id+" Task ID: "+this.getTask().getId()+" TYPE: "+this.getExecService().getExecServiceType()+ " FACILITY: "+this.getFacility()+ " STATUS: "+this.getTask().getStatus());
             
         }
         
         public String runningToString(){
-            return ("Worker of task with ID: "+this.getTask().getId()+" TYPE: "+this.getExecService().getExecServiceType()+ " FACILITY: "+this.getFacility()+ " STATUS: "+this.getTask().getStatus().RUNNING);
+            return ("Worker ID: "+this.id+" Task ID: "+this.getTask().getId()+" TYPE: "+this.getExecService().getExecServiceType()+ " FACILITY: "+this.getFacility()+ " STATUS: "+this.getTask().getStatus().RUNNING);
+            
+        }
+        public String completedToString(){
+            return ("Worker ID: "+this.id+" Task ID: "+this.getTask().getId()+" TYPE: "+this.getExecService().getExecServiceType()+ " FACILITY: "+this.getFacility()+ " STATUS: "+this.getTask().getStatus() + " TIME: "+(this.getTask().getEndTime().getTime()-this.getTask().getStartTime().getTime())+"ms");
             
         }
         
         public void setLock(WorkerLock lock){
             this.lock = lock;
             
+        }
+        
+        public void setID(int id){
+        
+            this.id = id;
         }
 }

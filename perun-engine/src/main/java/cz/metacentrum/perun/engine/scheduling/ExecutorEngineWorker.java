@@ -28,6 +28,12 @@ public interface ExecutorEngineWorker extends Runnable {
     
     TaskResultListener getResultListener();
     
+    void setID(int id);
+    
     @Override
     String toString();
+    
+    String runningToString();
+    
+    String completedToString();
 }

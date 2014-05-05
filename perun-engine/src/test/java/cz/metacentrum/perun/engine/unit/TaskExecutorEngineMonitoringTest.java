@@ -104,12 +104,21 @@ public class TaskExecutorEngineMonitoringTest extends TestBase {
     public void beginExecutingTest(){
 //        System.out.println("size of runningsend "+taskExecutorEngineMonitoring.getRunningSendWorkers().size());
         taskExecutorEngine.beginExecuting();
-       
+       try{
         NewTaskExecutorImpl executor = (NewTaskExecutorImpl) taskExecutorEngine.getTaskExecutorSendWorkers();   
-        for(int i = 0; i<10; i++){
-            executor.printAndWait(60);
-        }
+        System.out.println(executor.getThreadPoolExecutor().toString());
+        Thread.sleep(10);
+         System.out.println(executor.getThreadPoolExecutor().toString());
+         Thread.sleep(20);
+          System.out.println(executor.getThreadPoolExecutor().toString());
+           Thread.sleep(10);
+          System.out.println(executor.getThreadPoolExecutor().toString());
+          Thread.sleep(20);
+          System.out.println(executor.getThreadPoolExecutor().toString());
+          
+         
         
+       }catch (InterruptedException e){}
       
 }
         

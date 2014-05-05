@@ -144,13 +144,15 @@
         <dependency>
             <groupId>cz.metacentrum.perun</groupId>
             <artifactId>perun-core</artifactId>
-            <version>${project.version}</version>
+            <version>3.0.1-SNAPSHOT-engine-new</version>
+            <type>jar</type>
         </dependency>
 
         <dependency>
                 <groupId>cz.metacentrum.perun</groupId>
                 <artifactId>perun-beans</artifactId>
-                <version>${project.version}</version>
+                <version>3.0.1-SNAPSHOT-engine-new</version>
+            <type>jar</type>
         </dependency>
  
         <dependency>
@@ -239,6 +241,8 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <type>jar</type>
         </dependency>
 
         <!-- LOGGING -->

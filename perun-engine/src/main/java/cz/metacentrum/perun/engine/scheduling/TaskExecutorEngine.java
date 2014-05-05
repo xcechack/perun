@@ -1,6 +1,9 @@
 package cz.metacentrum.perun.engine.scheduling;
 
+import cz.metacentrum.perun.engine.scheduling.impl.NewTaskExecutorImpl;
+import cz.metacentrum.perun.engine.scheduling.impl.TaskExecutorEngineMonitoring;
 import org.springframework.core.task.TaskExecutor;
+
 
 /**
  * 
@@ -20,4 +23,7 @@ public interface TaskExecutorEngine {
 	public void setSchedulingPool(SchedulingPool schedulingPool);
 	public void setTaskExecutorSendWorkers(TaskExecutor sendWorkers);
 	public void setTaskExecutorGenWorkers(TaskExecutor genWorkers);
+        public TaskExecutor getTaskExecutorSendWorkers();
+     
+        
 }

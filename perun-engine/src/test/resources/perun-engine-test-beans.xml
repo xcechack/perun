@@ -13,6 +13,8 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
 http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
 ">
 
+
+
 	<bean id="destination1" class="cz.metacentrum.perun.core.api.Destination">
 		<constructor-arg name="id" value="1" />
 		<constructor-arg name="destination" value="par_dest1" />
@@ -64,6 +66,15 @@ http://www.springframework.org/schema/jdbc http://www.springframework.org/schema
 	    <property name="service" ref="service1" />
 	</bean>
 
+	<bean id="execservice4" class="cz.metacentrum.perun.taskslib.model.ExecService">
+		<property name="id" value="4" />
+	    <property name="defaultDelay" value="1" />
+	    <property name="script" value="/bin/true" />
+	    <property name="enabled" value="true" />
+	    <property name="execServiceType" value="SEND" />
+	    <property name="service" ref="service1" />
+	</bean>
+
 	<bean id="execservice_gen" class="cz.metacentrum.perun.taskslib.model.ExecService">
 		<property name="id" value="3" />
 	    <property name="defaultDelay" value="1" />
@@ -90,7 +101,7 @@ http://www.springframework.org/schema/jdbc http://www.springframework.org/schema
 				<ref bean="destination3" />
 				<ref bean="destination4" />
 			</list>
-		</property>	
+		</property>
 	</bean>
 
 	<bean id="task2" class="cz.metacentrum.perun.taskslib.model.Task">
@@ -104,7 +115,7 @@ http://www.springframework.org/schema/jdbc http://www.springframework.org/schema
 				<ref bean="destination3" />
 				<ref bean="destination4" />
 			</list>
-		</property>	
+		</property>
 	</bean>
 
 	<bean id="task_gen" class="cz.metacentrum.perun.taskslib.model.Task">
@@ -118,8 +129,136 @@ http://www.springframework.org/schema/jdbc http://www.springframework.org/schema
 				<ref bean="destination3" />
 				<ref bean="destination4" />
 			</list>
-		</property>	
+		</property>
 
 	</bean>
-	
+
+	<bean id="task4" class="cz.metacentrum.perun.taskslib.model.Task">
+		<property name="id" value="4" />
+		<property name="execService" ref="execservice2" />
+		<property name="facility" ref="facility1" />
+		<property name="destinations">
+			<list>
+				<ref bean="destination1" />
+				<ref bean="destination2" />
+				<ref bean="destination3" />
+				<ref bean="destination4" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="task5" class="cz.metacentrum.perun.taskslib.model.Task">
+		<property name="id" value="5" />
+		<property name="execService" ref="execservice2" />
+		<property name="facility" ref="facility1" />
+		<property name="destinations">
+			<list>
+				<ref bean="destination1" />
+				<ref bean="destination2" />
+				<ref bean="destination3" />
+				<ref bean="destination4" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="task6" class="cz.metacentrum.perun.taskslib.model.Task">
+		<property name="id" value="6" />
+		<property name="execService" ref="execservice2" />
+		<property name="facility" ref="facility1" />
+		<property name="destinations">
+			<list>
+				<ref bean="destination1" />
+				<ref bean="destination2" />
+				<ref bean="destination3" />
+				<ref bean="destination4" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="task7" class="cz.metacentrum.perun.taskslib.model.Task">
+		<property name="id" value="7" />
+		<property name="execService" ref="execservice2" />
+		<property name="facility" ref="facility1" />
+		<property name="destinations">
+			<list>
+				<ref bean="destination1" />
+				<ref bean="destination2" />
+				<ref bean="destination3" />
+				<ref bean="destination4" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="task8" class="cz.metacentrum.perun.taskslib.model.Task">
+		<property name="id" value="8" />
+		<property name="execService" ref="execservice2" />
+		<property name="facility" ref="facility1" />
+		<property name="destinations">
+			<list>
+				<ref bean="destination1" />
+				<ref bean="destination2" />
+				<ref bean="destination3" />
+				<ref bean="destination4" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="task9" class="cz.metacentrum.perun.taskslib.model.Task">
+		<property name="id" value="9" />
+		<property name="execService" ref="execservice2" />
+		<property name="facility" ref="facility1" />
+		<property name="destinations">
+			<list>
+				<ref bean="destination1" />
+				<ref bean="destination2" />
+				<ref bean="destination3" />
+				<ref bean="destination4" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="task10" class="cz.metacentrum.perun.taskslib.model.Task">
+		<property name="id" value="10" />
+		<property name="execService" ref="execservice2" />
+		<property name="facility" ref="facility1" />
+		<property name="destinations">
+			<list>
+				<ref bean="destination1" />
+				<ref bean="destination2" />
+				<ref bean="destination3" />
+				<ref bean="destination4" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="task11" class="cz.metacentrum.perun.taskslib.model.Task">
+		<property name="id" value="11" />
+		<property name="execService" ref="execservice2" />
+		<property name="facility" ref="facility1" />
+		<property name="destinations">
+			<list>
+				<ref bean="destination1" />
+				<ref bean="destination2" />
+				<ref bean="destination3" />
+				<ref bean="destination4" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="task12" class="cz.metacentrum.perun.taskslib.model.Task">
+		<property name="id" value="12" />
+		<property name="execService" ref="execservice2" />
+		<property name="facility" ref="facility1" />
+		<property name="destinations">
+			<list>
+				<ref bean="destination1" />
+				<ref bean="destination2" />
+				<ref bean="destination3" />
+				<ref bean="destination4" />
+			</list>
+		</property>
+	</bean>
+
+
+
 </beans>

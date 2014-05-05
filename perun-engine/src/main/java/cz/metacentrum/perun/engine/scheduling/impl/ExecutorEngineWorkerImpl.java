@@ -20,6 +20,7 @@ import cz.metacentrum.perun.core.api.Destination;
 import cz.metacentrum.perun.core.api.Facility;
 import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
 import cz.metacentrum.perun.engine.scheduling.ExecutorEngineWorker;
+import cz.metacentrum.perun.engine.scheduling.SchedulingPool;
 import cz.metacentrum.perun.engine.scheduling.TaskResultListener;
 import cz.metacentrum.perun.taskslib.dao.TaskResultDao;
 import cz.metacentrum.perun.taskslib.model.ExecService;
@@ -29,6 +30,8 @@ import cz.metacentrum.perun.taskslib.model.Task.TaskStatus;
 import cz.metacentrum.perun.taskslib.model.TaskResult;
 import cz.metacentrum.perun.taskslib.model.TaskResult.TaskResultStatus;
 import cz.metacentrum.perun.taskslib.service.TaskManager;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
 
 @Component("executorEngineWorker")
 @Scope(value = "prototype")
@@ -45,12 +48,20 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
     @Autowired
     private Properties propertiesBean;
     private int engineId = -1;
-
+    @Autowired
+    private SchedulingPool schedulingPool;
+    
+    private WorkerLock lock;
+    
     @Override
-    public void run() {
+    public void run()  {
+    try{
+        lock.writingLock().lock();
         log.info("EXECUTING(worker:" + this.hashCode() + "): Task ID:" + task.getId() + ", Facility ID:" + task.getFacilityId() + ", ExecService ID:" + task.getExecServiceId() + ", ExecServiceType:"
                 + execService.getExecServiceType());
-
+        this.getTask().setStatus(TaskStatus.RUNNING);
+//        
+//        lock.writingLock().lock();
         String stdout = null;
         String stderr = null;
         int returnCode = -1;
@@ -98,9 +109,24 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
                   String ret = returnCode == -1 ? "unknown" : String.valueOf(returnCode);
                   log.debug("GEN task ended. Ret code " + ret + ". STDOUT: {}  STDERR: {}. Task: " + task, stdout, stderr);
                   //taskManager.updateTask(task, getEngineId());
+                  
+                   /**********************************************************************
+               JUST FOR TESTING - will be deleted soon*/
+                
+              
+               try {
+                Thread.sleep(100); //pretends like it took 100ms to execute this worker
+                } catch(InterruptedException ex) {
+                  Thread.currentThread().interrupt();
+}
+               
+                schedulingPool.setTaskStatus(task, TaskStatus.DONE);
+               
+                
+                //END OF TESTING
+                  
             }
         } else if (execService.getExecServiceType().equals(ExecServiceType.SEND)) {
-
             ProcessBuilder pb = new ProcessBuilder(execService.getScript(), facility.getName() + '-' + facility.getType(), destination.getDestination(), destination.getType());
             pb.directory(new File("send")); ///FIXME get from config file
 
@@ -108,7 +134,6 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
             try {
 
                 Process process = pb.start();
-
                 StreamGobbler errorGobbler = new StreamGobbler(process.getErrorStream());
                 StreamGobbler outputGobbler = new StreamGobbler(process.getInputStream());               
                 
@@ -127,6 +152,7 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
                 taskResult.setDestinationId(destination.getId());
                 taskResult.setErrorMessage(stderr);
                 //According to RT 30609, STDOUT should be only logged now.
+                
                 log.debug(stdout.toString());
                 taskResult.setStandardMessage("See debug log.");
                 taskResult.setReturnCode(returnCode);
@@ -147,10 +173,28 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
                 }
 
             } catch (Exception e) {
+                /**********************************************************************
+               JUST FOR TESTING - will be deleted soon*/
+                
+              
+               try {
+                Thread.sleep(100); //pretends like it took 100ms to execute this worker
+                } catch(InterruptedException ex) {
+                  Thread.currentThread().interrupt();
+}
+               
+                schedulingPool.setTaskStatus(task, TaskStatus.DONE);
+               
+                //END OF TESTING
+                
+                
+                /***************************************************************/
+                
                 log.info("SEND task ended. Ret code " + returnCode + ". STDOUT: {}  STDERR: {}. Task: " + task, stdout, stderr);
                 log.error("ERROR with TASK ID: " + task.getId() + " , Exception:" + e.toString(), e);
                 // If we are unable to switch to the ERROR state, PropagationMaintainer would resolve
                 // the Tasks status correctly anyhow (count Destinations x count TaskResults)
+                
                 TaskResult taskResult = new TaskResult();
                 taskResult.setTaskId(task.getId());
                 taskResult.setDestinationId(destination.getId());
@@ -171,6 +215,9 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
         } else {
             throw new IllegalArgumentException("Expected ExecService type is SEND or GENERATE.");
         }
+    }finally{
+        lock.writingLock().unlock();
+    }
     }
 
     public TaskResultDao getTaskResultDao() {
@@ -235,4 +282,21 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
 	public void setResultListener(TaskResultListener resultListener) {
 		this.resultListener = resultListener;
 	}
+        
+       
+        public String toString(){
+        
+            return ("Worker of task with ID: "+this.getTask().getId()+" TYPE: "+this.getExecService().getExecServiceType()+ " FACILITY: "+this.getFacility()+ " STATUS: "+this.getTask().getStatus());
+            
+        }
+        
+        public String runningToString(){
+            return ("Worker of task with ID: "+this.getTask().getId()+" TYPE: "+this.getExecService().getExecServiceType()+ " FACILITY: "+this.getFacility()+ " STATUS: "+this.getTask().getStatus().RUNNING);
+            
+        }
+        
+        public void setLock(WorkerLock lock){
+            this.lock = lock;
+            
+        }
 }

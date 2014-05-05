@@ -15,6 +15,7 @@ import cz.metacentrum.perun.core.api.Destination;
 import cz.metacentrum.perun.core.api.exceptions.InternalErrorException;
 import cz.metacentrum.perun.engine.scheduling.DependenciesResolver;
 import cz.metacentrum.perun.engine.scheduling.ExecutorEngineWorker;
+import cz.metacentrum.perun.engine.scheduling.NewTaskExecutor;
 import cz.metacentrum.perun.engine.scheduling.PropagationMaintainer;
 import cz.metacentrum.perun.engine.scheduling.SchedulingPool;
 import cz.metacentrum.perun.engine.scheduling.TaskExecutorEngine;
@@ -59,15 +60,20 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
 	private TaskStatusManager taskStatusManager;
     @Autowired
     private SchedulingPool schedulingPool;
+
     
     @Override
     public void beginExecuting() {
-    	// run all tasks in scheduled state
+       
+        
+        // run all tasks in scheduled state
     	Date now = new Date(System.currentTimeMillis());
     	for(Task task : schedulingPool.getPlannedTasks()) {
+          
     		log.debug("TASK " + task.toString() + " is to be run at " + task.getSchedule() + ", now is " + now);
     		if(task.getSchedule().before(now)) {
         		log.debug("TASK " + task.toString() + " is going to run");
+                        
     			runTask(task);
     		}
     	}
@@ -141,6 +147,8 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
      */
     private void runTask(Task task) {
     	schedulingPool.setTaskStatus(task, TaskStatus.PROCESSING);
+        
+        
     	task.setStartTime(new Date(System.currentTimeMillis()));
     	List<Task> dependencies = dependencyResolver.getDependencies(task);
     	// TODO: handle GEN tasks with no destinations
@@ -149,6 +157,7 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
         	boolean proceed = true;
 			try {
 				for(Task dependency : dependencies) {
+                                    
 					if(taskStatusManager.getTaskStatus(dependency).getDestinationStatus(destination) != TaskDestinationStatus.DONE) {
 						log.debug("TASK " + task.toString() + " has unmet dependencies");
 						proceed = false;
@@ -165,8 +174,10 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
 				} catch (InternalErrorException e) {
 					log.error("Error setting status for destination {} of task {}", destination, task.toString());
 				}
-        		startWorker(task, destination);
+                        
+                        startWorker(task, destination);
         	}
+                
     	}
     }
     
@@ -177,6 +188,7 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
     private void startWorker(Task task, Destination destination) {
     	log.debug("Starting worker for task " + task.getId() + " and destination " + destination.toString());
     	ExecutorEngineWorker executorEngineWorker = createExecutorEngineWorker();
+       
         executorEngineWorker.setTask(task);
         executorEngineWorker.setFacility(task.getFacility());
         executorEngineWorker.setExecService(task.getExecService());
@@ -186,7 +198,13 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
         } else {
         	executorEngineWorker.setResultListener((TaskResultListener) taskStatusManager);
         }
-        taskExecutorSendWorkers.execute(executorEngineWorker);
+      
+        
+        /********************************************{
+         * ONLY UNTIL SOLVING @AUTOWIRED PROBLEM
+         */
+     
+      taskExecutorSendWorkers.execute(executorEngineWorker);
     }
     
     /**
@@ -378,4 +396,10 @@ public class TaskExecutorEngineImpl implements TaskExecutorEngine {
 		this.schedulingPool = schedulingPool;
 	}
 
+        
+
+   
+    
+
+   
 }

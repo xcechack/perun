@@ -3,6 +3,7 @@ package cz.metacentrum.perun.engine.scheduling;
 import cz.metacentrum.perun.core.api.Destination;
 import cz.metacentrum.perun.core.api.Facility;
 import cz.metacentrum.perun.engine.scheduling.impl.TaskExecutorEngineMonitoring;
+import cz.metacentrum.perun.engine.scheduling.impl.WorkerStatus;
 import cz.metacentrum.perun.taskslib.model.ExecService;
 import cz.metacentrum.perun.taskslib.model.Task;
 
@@ -33,7 +34,8 @@ public interface ExecutorEngineWorker extends Runnable {
     @Override
     String toString();
     
-    String runningToString();
     
-    String completedToString();
+    public void setWorkerStatus(WorkerStatus status);
+    
+    public WorkerStatus getWorkerStatus();
 }

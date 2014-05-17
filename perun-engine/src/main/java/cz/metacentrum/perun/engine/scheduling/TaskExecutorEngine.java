@@ -1,7 +1,5 @@
 package cz.metacentrum.perun.engine.scheduling;
 
-import cz.metacentrum.perun.engine.scheduling.impl.NewTaskExecutorImpl;
-import cz.metacentrum.perun.engine.scheduling.impl.TaskExecutorEngineMonitoring;
 import org.springframework.core.task.TaskExecutor;
 
 

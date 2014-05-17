@@ -4,22 +4,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import cz.metacentrum.perun.engine.TestBase;
 import cz.metacentrum.perun.engine.scheduling.SchedulingPool;
 import cz.metacentrum.perun.engine.scheduling.TaskExecutorEngine;
-import cz.metacentrum.perun.engine.scheduling.impl.NewTaskExecutorImpl;
-import cz.metacentrum.perun.engine.scheduling.impl.NewThreadPoolExecutor;
+import cz.metacentrum.perun.engine.scheduling.impl.MonitoringTaskExecutorImpl;
 import cz.metacentrum.perun.engine.scheduling.impl.TaskExecutorEngineMonitoring;
 import cz.metacentrum.perun.taskslib.dao.TaskResultDao;
 import cz.metacentrum.perun.taskslib.model.Task;
-import static java.lang.Thread.sleep;
-import org.apache.log4j.Logger;
 import org.junit.After;
-import org.junit.Assert;
 import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
 /**
- *
- * @author Janicka
+ * Tests for monitoring Engine
+ * @author Jana Cechackova
  */
 public class TaskExecutorEngineMonitoringTest extends TestBase {
     
@@ -104,21 +100,11 @@ public class TaskExecutorEngineMonitoringTest extends TestBase {
     public void beginExecutingTest(){
 //        System.out.println("size of runningsend "+taskExecutorEngineMonitoring.getRunningSendWorkers().size());
         taskExecutorEngine.beginExecuting();
-       try{
-        NewTaskExecutorImpl executor = (NewTaskExecutorImpl) taskExecutorEngine.getTaskExecutorSendWorkers();   
-        System.out.println(executor.getThreadPoolExecutor().toString());
-        Thread.sleep(10);
-         System.out.println(executor.getThreadPoolExecutor().toString());
-         Thread.sleep(20);
-          System.out.println(executor.getThreadPoolExecutor().toString());
-           Thread.sleep(10);
-          System.out.println(executor.getThreadPoolExecutor().toString());
-          Thread.sleep(20);
-          System.out.println(executor.getThreadPoolExecutor().toString());
-          
-         
-        
-       }catch (InterruptedException e){}
+       
+        MonitoringTaskExecutorImpl executor = (MonitoringTaskExecutorImpl) taskExecutorEngine.getTaskExecutorSendWorkers();   
+                
+        executor.printAndWait(5, 1);
+       
       
 }
         

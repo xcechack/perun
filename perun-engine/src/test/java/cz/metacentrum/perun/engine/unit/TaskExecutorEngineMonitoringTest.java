@@ -5,7 +5,6 @@ import cz.metacentrum.perun.engine.TestBase;
 import cz.metacentrum.perun.engine.scheduling.SchedulingPool;
 import cz.metacentrum.perun.engine.scheduling.TaskExecutorEngine;
 import cz.metacentrum.perun.engine.scheduling.impl.MonitoringTaskExecutorImpl;
-import cz.metacentrum.perun.engine.scheduling.impl.TaskExecutorEngineMonitoring;
 import cz.metacentrum.perun.taskslib.dao.TaskResultDao;
 import cz.metacentrum.perun.taskslib.model.Task;
 import org.junit.After;
@@ -42,7 +41,7 @@ public class TaskExecutorEngineMonitoringTest extends TestBase {
     @Autowired
     TaskResultDao taskResultDao;
     
-    private TaskExecutorEngineMonitoring taskExecutorEngineMonitoring;
+   
     
     @Before
     public void setup(){

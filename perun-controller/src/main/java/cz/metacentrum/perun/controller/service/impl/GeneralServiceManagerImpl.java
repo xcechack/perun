@@ -41,8 +41,7 @@ public class GeneralServiceManagerImpl implements GeneralServiceManager {
 	public final static String FORCE_PROPAGATION = "force propagation: ";
         public final static String FREE_ALL_DEN = "free all denials: ";
         public final static String FREE_DEN_OF_EXECSERVICE = "free denial: ";
-        public final static String BAN_EXECSERVICE = "ban :";
-        
+        public final static String BAN_SERVICE = "ban :";        
 
 	@Autowired
 	private ExecServiceDao execServiceDao;
@@ -88,29 +87,24 @@ public class GeneralServiceManagerImpl implements GeneralServiceManager {
 	@Override
 	public void updateExecService(PerunSession perunSession, ExecService execService) throws ServiceNotExistsException, InternalErrorException, PrivilegeException {
 		servicesManager.updateService(perunSession, execService.getService());
-		execServiceDao.updateExecService(execService);
-                
+		execServiceDao.updateExecService(execService);                
 	}
 
 	@Override
 	public void deleteExecService(ExecService execService) {
-		execServiceDao.deleteExecService(execService.getId());
-               
+		execServiceDao.deleteExecService(execService.getId());               
 	}
 
 	@Override
 	public void banExecServiceOnFacility(PerunSession sess, ExecService execService, Facility facility) throws InternalErrorException {
-            execServiceDenialDao.banExecServiceOnFacility(execService.getId(), facility.getId());
-            sess.getPerun().getAuditer().logWithoutTransaction(sess, BAN_EXECSERVICE + "{} on {} ", execService, facility);
-		
-		
+                execServiceDenialDao.banExecServiceOnFacility(execService.getId(), facility.getId());
+                sess.getPerun().getAuditer().log(sess, "{} {} on {} ", execService, BAN_SERVICE, facility);
 	}
 
 	@Override
 	public void banExecServiceOnDestination(PerunSession sess, ExecService execService, int destinationId) throws InternalErrorException {
 		execServiceDenialDao.banExecServiceOnDestination(execService.getId(), destinationId);
-                sess.getPerun().getAuditer().logWithoutTransaction(sess, BAN_EXECSERVICE+ "{} on {} ", execService, destinationId);
-		
+                sess.getPerun().getAuditer().log(sess, "{} {} on {} ", execService, BAN_SERVICE, destinationId);
 	}
 
 	@Override
@@ -136,32 +130,26 @@ public class GeneralServiceManagerImpl implements GeneralServiceManager {
 	@Override
         //public void freeAllDenialsOnFacility(Facility facility){
 	public void freeAllDenialsOnFacility(PerunSession sess, Facility facility) throws InternalErrorException{
-                
-		execServiceDenialDao.freeAllDenialsOnFacility(facility.getId());
-                sess.getPerun().getAuditer().logWithoutTransaction(sess, FREE_ALL_DEN + "On {} ", facility);
-		
-                
-	}
+                execServiceDenialDao.freeAllDenialsOnFacility(facility.getId());
+                sess.getPerun().getAuditer().logWithoutTransaction(sess, "{} on {} " ,FREE_ALL_DEN, facility);
+        }
 
 	@Override
 	public void freeAllDenialsOnDestination(PerunSession sess, int destinationId) throws InternalErrorException {
 		execServiceDenialDao.freeAllDenialsOnDestination(destinationId);
-                sess.getPerun().getAuditer().logWithoutTransaction(sess, FREE_ALL_DEN + "On {} ", destinationId);
-		
-	}
+                sess.getPerun().getAuditer().logWithoutTransaction(sess, "{} on {} ", FREE_ALL_DEN, destinationId);
+        }
 
 	@Override
 	public void freeDenialOfExecServiceOnFacility(PerunSession sess, ExecService execService, Facility facility) throws InternalErrorException{
 		execServiceDenialDao.freeDenialOfExecServiceOnFacility(execService.getId(), facility.getId());
-                sess.getPerun().getAuditer().logWithoutTransaction(sess, FREE_DEN_OF_EXECSERVICE + "{} on {} ", execService, facility);
-		
-	}
+                sess.getPerun().getAuditer().log(sess, "{} {} on {} ", execService, FREE_DEN_OF_EXECSERVICE, facility);
+        }
 
 	@Override
 	public void freeDenialOfExecServiceOnDestination(PerunSession sess, ExecService execService, int destinationId) throws InternalErrorException {
 		execServiceDenialDao.freeDenialOfExecServiceOnDestination(execService.getId(), destinationId);
-                
-                sess.getPerun().getAuditer().logWithoutTransaction(sess, FREE_DEN_OF_EXECSERVICE + "{} on {} ", execService, destinationId);
+                sess.getPerun().getAuditer().log(sess, "{} {} on {} ", execService, FREE_DEN_OF_EXECSERVICE, destinationId);
 	}
 
 	@Override

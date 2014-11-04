@@ -87,13 +87,13 @@ public class GeneralServiceManagerImpl implements GeneralServiceManager {
 	@Override
 	public void updateExecService(PerunSession perunSession, ExecService execService) throws ServiceNotExistsException, InternalErrorException, PrivilegeException {
 		servicesManager.updateService(perunSession, execService.getService());
-		execServiceDao.updateExecService(execService);                
-	}
+		execServiceDao.updateExecService(execService);
+        }
 
 	@Override
 	public void deleteExecService(ExecService execService) {
-		execServiceDao.deleteExecService(execService.getId());               
-	}
+		execServiceDao.deleteExecService(execService.getId());
+        }
 
 	@Override
 	public void banExecServiceOnFacility(PerunSession sess, ExecService execService, Facility facility) throws InternalErrorException {

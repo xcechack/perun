@@ -128,7 +128,6 @@ public class GeneralServiceManagerImpl implements GeneralServiceManager {
 	}
 
 	@Override
-        //public void freeAllDenialsOnFacility(Facility facility){
 	public void freeAllDenialsOnFacility(PerunSession sess, Facility facility) throws InternalErrorException{
                 execServiceDenialDao.freeAllDenialsOnFacility(facility.getId());
                 sess.getPerun().getAuditer().logWithoutTransaction(sess, "{} on {}" ,FREE_ALL_DEN, facility);

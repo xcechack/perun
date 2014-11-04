@@ -39,9 +39,9 @@ public class GeneralServiceManagerImpl implements GeneralServiceManager {
 	private final static Logger log = LoggerFactory.getLogger(GeneralServiceManagerImpl.class);
 	// Beginning of the auditer message which triggers service propagation
 	public final static String FORCE_PROPAGATION = "force propagation: ";
-        public final static String FREE_ALL_DEN = "free all denials: ";
-        public final static String FREE_DEN_OF_EXECSERVICE = "free denial: ";
-        public final static String BAN_SERVICE = "ban :";        
+	public final static String FREE_ALL_DEN = "free all denials: ";
+	public final static String FREE_DEN_OF_EXECSERVICE = "free denial: ";
+	public final static String BAN_SERVICE = "ban :";        
 
 	@Autowired
 	private ExecServiceDao execServiceDao;

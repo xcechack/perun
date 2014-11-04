@@ -129,14 +129,14 @@ public class GeneralServiceManagerImpl implements GeneralServiceManager {
 
 	@Override
 	public void freeAllDenialsOnFacility(PerunSession sess, Facility facility) throws InternalErrorException{
-                execServiceDenialDao.freeAllDenialsOnFacility(facility.getId());
-                sess.getPerun().getAuditer().logWithoutTransaction(sess, "{} on {}" ,FREE_ALL_DEN, facility);
+		execServiceDenialDao.freeAllDenialsOnFacility(facility.getId());
+		sess.getPerun().getAuditer().logWithoutTransaction(sess, "{} on {}" ,FREE_ALL_DEN, facility);
 	}
 
 	@Override
 	public void freeAllDenialsOnDestination(PerunSession sess, int destinationId) throws InternalErrorException {
 		execServiceDenialDao.freeAllDenialsOnDestination(destinationId);
-                sess.getPerun().getAuditer().logWithoutTransaction(sess, "{} on {}", FREE_ALL_DEN, destinationId);
+		sess.getPerun().getAuditer().logWithoutTransaction(sess, "{} on {}", FREE_ALL_DEN, destinationId);
 	}
 
 	@Override

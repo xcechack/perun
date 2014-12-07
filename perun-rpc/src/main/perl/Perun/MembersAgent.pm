@@ -77,6 +77,10 @@ sub setStatus
 {
 	return Perun::Common::callManagerMethod('setStatus', 'Member', @_);
 }
+sub validateMember
+{
+	return Perun::Common::callManagerMethod('validateMember','Member',@_);
+}
 sub validateMemberAsync
 {
 	return Perun::Common::callManagerMethod('validateMemberAsync','Member',@_);

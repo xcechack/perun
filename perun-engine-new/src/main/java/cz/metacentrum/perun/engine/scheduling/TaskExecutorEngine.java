@@ -24,6 +24,10 @@ public interface TaskExecutorEngine {
 	public void setSchedulingPool(SchedulingPool schedulingPool);
 
 	public void setTaskExecutorSendWorkers(TaskExecutor sendWorkers);
+        
+        TaskExecutor getTaskExecutorSendWorkers();
 
 	public void setTaskExecutorGenWorkers(TaskExecutor genWorkers);
+        
+        TaskExecutor getTaskExecutorGenWorkers();
 }

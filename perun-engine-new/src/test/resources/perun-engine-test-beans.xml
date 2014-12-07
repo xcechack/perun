@@ -120,5 +120,11 @@ http://www.springframework.org/schema/jdbc http://www.springframework.org/schema
 		</property>	
 
 	</bean>
+
+        <!--monitoring beans-->      
+        <bean id="runningWorkers" class="java.util.concurrent.CopyOnWriteArraySet"/>
+        <bean id="finishedWorkers" class="java.util.concurrent.CopyOnWriteArraySet"/>
+        <bean id="changeLock" class="cz.metacentrum.perun.engine.scheduling.impl"/>
+        
 	
 </beans>

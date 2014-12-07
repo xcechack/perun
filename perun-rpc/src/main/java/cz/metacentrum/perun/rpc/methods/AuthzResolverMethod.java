@@ -26,15 +26,12 @@ public enum AuthzResolverMethod implements ManagerMethod {
 		}
 	},
 
-	/*#
-	 * Set role for user or authorized group and complementary object or objects
+	/*# Set role for user or authorized group and complementary object or objects
 	 *
 	 * If some complementary object is wrong for the role, throw an exception.
 	 * For role "perunadmin" ignore complementary object.
 	 *
 	 * IMPORTANT: refresh authz only if user in session is affected
-	 *
-	 * @return void
 	 */
 	setRole {
 		@Override
@@ -86,15 +83,12 @@ public enum AuthzResolverMethod implements ManagerMethod {
 		}
 	},
 
-	/*#
-	 * Unset role for user or authorized group and complementary object or objects
+	/*# Unset role for user or authorized group and complementary object or objects
 	 *
 	 * If some complementary object is wrong for the role, throw an exception.
 	 * For role "perunadmin" ignore complementary object.
 	 *
 	 * IMPORTANT: refresh authz only if user in session is affected
-	 *
-	 * @return void
 	 */
 	unsetRole {
 		@Override

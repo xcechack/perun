@@ -1,5 +1,7 @@
 package cz.metacentrum.perun.engine.jms;
 
+import cz.metacentrum.perun.engine.scheduling.ExecutorEngineWorker;
+import cz.metacentrum.perun.engine.scheduling.TaskExecutorEngineMonitoring;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -23,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskExecutor;
 
 import cz.metacentrum.perun.taskslib.model.Task;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * 
@@ -48,6 +51,8 @@ public class JMSQueueManager {
 	private Connection connection = null;
 	private boolean needToConnect = true;
 	private int waitTime = 0;
+        @Autowired
+        private TaskExecutorEngineMonitoring taskExecutorSendWorkers;
 
 	public void initiateConnection() {
 		while (needToConnect) {
@@ -172,6 +177,10 @@ public class JMSQueueManager {
 		log.debug("Task result message [" + message.getText()
 				+ "] has been sent...");
 	}
+        
+        public void reportRunningWorkers(){
+            CopyOnWriteArraySet <ExecutorEngineWorker> runWorkers = taskExecutorSendWorkers.getRunningWorkers();
+        }
 
 	public void sendGoodByeAndClose() {
 		try {

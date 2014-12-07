@@ -45,6 +45,7 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
 	@Autowired
 	private Properties propertiesBean;
 	private int engineId = -1;
+        private WorkerStatus status;
 
 	@Override
 	public void run() {
@@ -224,6 +225,14 @@ public class ExecutorEngineWorkerImpl implements ExecutorEngineWorker {
 	public void setTask(Task task) {
 		this.task = task;
 	}
+        
+        public WorkerStatus getStatus(){
+            return status;
+        }
+        
+        public void setStatus(WorkerStatus newStatus){
+            this.status = newStatus;
+        }
 
 	public Facility getFacility() {
 		return facility;
